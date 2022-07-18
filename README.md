@@ -16,5 +16,6 @@ module private_gitlab {
     instance_type = var.instance_type
     docker_cidr = var.docker_cidr
     project = var.project
+    compose_cidr = var.compose_cidr
 }
 ```
