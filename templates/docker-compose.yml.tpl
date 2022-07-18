@@ -1,21 +1,24 @@
-version: "1"
+version: '3.8'
 services:
   gitlab:
-    image: gitlab/gitlab-ce:latest
-    hostname: gitlab.ops.alaskaops.io
+    image: 'gitlab/gitlab-ce:latest'
+    hostname: 'gitlab.ops.alaskaops.io'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.ops.alaskaops.io'
     ports:
-      - 22:22
-      - 80:80
-      - 443:443
+      - '2222:22'
+      - '80:80'
+      - '443:443'
     volumes:
-      gitlab_config:/etc/gitlab
-      gitlab_logs:/var/log/gitlab
-      gitlab_data:/var/opt/gitlab
-    restart: unless-stopped
-volumes:
-  gitlab_config:
-  gitlab_logs:
-  gitlab_data:
+      - '$GITLAB_HOME/config:/etc/gitlab'
+      - '$GITLAB_HOME/logs:/var/log/gitlab'
+      - '$GITLAB_HOME/data:/var/opt/gitlab'
+    restart: always
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: ${compose_cidr}

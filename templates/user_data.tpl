@@ -17,6 +17,6 @@ mkdir /gitlab
 
 s3fs ${s3_bucket} /gitlab -o allow_other -o iam_role="auto" -o url="https://s3.${aws_region}.amazonaws.com"
 cd /gitlab
-chwon -R ubuntu:ubuntu /gitlab
-
+chown -R ubuntu:ubuntu /gitlab
+export GITLAB_HOME=/gitlab
 docker-compose up -d 

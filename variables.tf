@@ -4,6 +4,9 @@ variable "route53_zone_zone_id" {}
 variable "domain" {
   
 }
+variable "compose_cidr" {
+  
+}
 
 variable "subnet_ids" {
   

@@ -115,6 +115,7 @@ resource "aws_autoscaling_group" "this" {
 }
 
 resource "aws_launch_configuration" "this" {
+  iam_instance_profile        = aws_iam_instance_profile.this.name
   image_id                    = var.ami_id
   instance_type               = var.instance_type
   name_prefix                 = "${var.environment}-gitlab"
@@ -145,5 +146,48 @@ resource "aws_s3_bucket_acl" "gitlab" {
 resource "aws_s3_object" "docker_compose" {
   bucket = aws_s3_bucket.gitlab.bucket
   key    = "docker-compose.yml"
-  source = "${path.module}/templates/docker-compose.yml.tpl"
+  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { compose_cidr = var.compose_cidr })
+}
+
+resource "aws_iam_instance_profile" "this" {
+  name = "${var.environment}-gitlab"
+  role = aws_iam_role.this.name
+}
+
+resource "aws_iam_role" "this" {
+  name = "${var.environment}-gitlab"
+    assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "this" {
+  name   = "${var.environment}-gitlab"
+  role   = aws_iam_role.this.id
+  policy = <<-EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+              "arn:aws:s3:::${aws_s3_bucket.gitlab.bucket}",
+              "arn:aws:s3:::${aws_s3_bucket.gitlab.bucket}/*"
+            ]
+        }
+    ]
+}
+  EOF
 }
