@@ -100,7 +100,7 @@ resource "aws_launch_configuration" "this" {
   associate_public_ip_address = true
   user_data                   = templatefile("${path.module}/templates/user_data.tpl", 
     {
-      docker_compose_yml = base64encode(templatefile("${path.module}/templates/user_data.tpl", 
+      docker_compose_yml = base64encode(templatefile("${path.module}/templates/docker-compose.yml.tpl", 
         {
           hostname = "gitlab.${var.domain}"
         }))
