@@ -3,12 +3,6 @@ apt-get update
 apt-get install docker.io docker-compose s3fs awscli -y
 usermod -aG docker ubuntu
 
-read -r -d '' DAEMON_JSON << EOM
-{
-  "bip": "${docker_cidr}"
-}
-EOM
-
 sudo echo "$DAEMON_JSON" > /etc/docker/daemon.json
 
 sudo service docker restart

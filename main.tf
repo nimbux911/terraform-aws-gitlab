@@ -101,8 +101,7 @@ resource "aws_launch_configuration" "this" {
   user_data                   = templatefile("${path.module}/templates/user_data.tpl", 
       {
         aws_region        = data.aws_region.current.name,
-        s3_bucket         = aws_s3_bucket.this.bucket,
-        docker_cidr       = var.docker_cidr
+        s3_bucket         = aws_s3_bucket.this.bucket
       }
     )
   lifecycle {
