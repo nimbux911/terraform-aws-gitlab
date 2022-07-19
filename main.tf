@@ -99,13 +99,13 @@ resource "aws_launch_configuration" "this" {
   security_groups             = [module.security_group_alb.security_group_id]
   key_name                    = "${var.environment}-gitlab"
   associate_public_ip_address = true
-  user_data                   = templatefile("${path.module}/templates/user_data.tpl", 
+  user_data                   = templatefile("${path.module}/resources/templates/user_data.tpl", 
     {
-      docker_compose_yml = base64encode(templatefile("${path.module}/templates/docker-compose.yml.tpl", 
+      docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
           hostname = "gitlab.${var.domain}"
         })),
-      install_script = base64encode(templatefile("${path.module}/templates/install.sh.tpl"))
+      install_script = filebase64("${path.module}/resources/scripts/install.sh")
     }
   )
   lifecycle {
