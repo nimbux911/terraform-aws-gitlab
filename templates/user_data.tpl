@@ -1,16 +1,16 @@
-#!/bin/bash
-apt-get update
-apt-get install docker.io docker-compose s3fs awscli -y
-usermod -aG docker ubuntu
+#cloud-config
 
-sudo echo "$DAEMON_JSON" > /etc/docker/daemon.json
+write_files:
+  - path: /home/ubuntu/gitlab/docker-compose.yml
+    permissions: 0744
+    owner: ubuntu
+    content: ${docker_compose_yml}
+    encoding: b64
+  - path: /home/ubuntu/gitlab/install.sh
+    permissions: 0744
+    owner: ubuntu
+    content: ${install_script}
+    encoding: b64
 
-sudo service docker restart
-
-mkdir /gitlab
-
-s3fs ${s3_bucket} /gitlab -o allow_other -o iam_role="auto" -o url="https://s3.${aws_region}.amazonaws.com"
-cd /gitlab
-chown -R ubuntu:ubuntu /gitlab
-export GITLAB_HOME=/gitlab
-docker-compose up -d 
+runcmd:
+  - /home/ubuntu/gitlab/install.sh

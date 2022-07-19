@@ -99,29 +99,17 @@ resource "aws_launch_configuration" "this" {
   key_name                    = "${var.environment}-gitlab"
   associate_public_ip_address = true
   user_data                   = templatefile("${path.module}/templates/user_data.tpl", 
-      {
-        aws_region        = data.aws_region.current.name,
-        s3_bucket         = aws_s3_bucket.this.bucket
-      }
-    )
+    {
+      docker_compose_yml = base64encode(templatefile("${path.module}/templates/user_data.tpl", 
+        {
+          hostname = "gitlab.${var.domain}"
+        }))
+      install_script = filebase64("${path.module}/templates/install.sh.tpl")
+    }
+  )
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "aws_s3_bucket" "this" {
-  bucket = "${var.environment}-gitlab"
-}
-
-resource "aws_s3_bucket_acl" "this" {
-  bucket = aws_s3_bucket.this.id
-  acl    = "private"
-}
-
-resource "aws_s3_object" "docker_compose" {
-  bucket = aws_s3_bucket.this.bucket
-  key    = "docker-compose.yml"
-  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { hostname = "gitlab.${var.domain}" })
 }
 
 resource "aws_iam_instance_profile" "this" {
@@ -145,24 +133,4 @@ resource "aws_iam_role" "this" {
   ]
 }
 POLICY
-}
-
-resource "aws_iam_role_policy" "this" {
-  name   = "${var.environment}-gitlab"
-  role   = aws_iam_role.this.id
-  policy = <<-EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "s3:*",
-            "Resource": [
-              "arn:aws:s3:::${aws_s3_bucket.this.bucket}",
-              "arn:aws:s3:::${aws_s3_bucket.this.bucket}/*"
-            ]
-        }
-    ]
-}
-  EOF
 }
