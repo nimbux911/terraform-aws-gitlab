@@ -2,10 +2,10 @@ version: '3.8'
 services:
   gitlab:
     image: 'gitlab/gitlab-ce:latest'
-    hostname: 'gitlab.ops.alaskaops.io'
+    hostname: '${hostname}'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://gitlab.ops.alaskaops.io'
+        external_url 'https://${hostname}'
     ports:
       - '2222:22'
       - '80:80'
@@ -15,10 +15,3 @@ services:
       - '$GITLAB_HOME/logs:/var/log/gitlab'
       - '$GITLAB_HOME/data:/var/opt/gitlab'
     restart: always
-
-networks:
-  default:
-    ipam:
-      driver: default
-      config:
-        - subnet: ${compose_cidr}

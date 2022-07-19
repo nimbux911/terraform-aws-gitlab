@@ -1,13 +1,3 @@
-data "aws_availability_zones" "available" {
-}
-
-data "aws_region" "current" {}
-
-resource "aws_route53_zone" "this" {
-  name         = "gitlab.ops.alaskaops.io"
-
-}
-
 resource "aws_key_pair" "this" {
   key_name   = "${var.environment}-gitlab"
   public_key = base64decode(aws_ssm_parameter.public_key.value)
@@ -27,32 +17,18 @@ resource "aws_ssm_parameter" "public_key" {
 resource "aws_ssm_parameter" "private_key" {
   name  = "${var.environment}-gitlab-private-ssh-key"
   type  = "SecureString"
-  tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
-}  
-
-module "gitlab_cert" {
-  source         = "terraform-aws-modules/acm/aws"
-  version        = "~> v3.5.0"
-  
-  domain_name    = var.route53_zone_name[var.domain]
-  zone_id        = var.route53_zone_zone_id[var.domain]
-
-  subject_alternative_names = [ 
-    var.route53_zone_name[var.domain],
-    "*.${var.route53_zone_name[var.domain]}",
-  ]
 }
 
-module "alb_gitlab_private" {
+module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "~> 6.0"
   
   name               = "${var.environment}-gitlab"
   vpc_id             = var.vpc_id
-  subnets            = var.private_subnets_ids
+  subnets            = var.subnet_ids
   internal           = true
-  security_groups    = [module.security_group_gitlab_alb.security_group_id]
+  security_groups    = [module.security_group_alb.security_group_id]
   load_balancer_type = "application"
   enable_cross_zone_load_balancing = true
 
@@ -78,7 +54,7 @@ module "alb_gitlab_private" {
 
   https_listeners = [
     {
-      certificate_arn    = module.gitlab_cert.acm_certificate_arn
+      certificate_arn    = data.aws_acm_certificate.this.arn
       port               = 443
       protocol           = "HTTPS"
       target_group_index = 0
@@ -87,15 +63,15 @@ module "alb_gitlab_private" {
 
 }
 
-module "security_group_gitlab_alb" {
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 4.0"
-  description = "Security group for the gitlab ELB"
-  name        = "${var.environment}-alb"
-  vpc_id      = var.vpc_id
-
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp", "all-icmp"]
+module "security_group_alb" {
+  source      = "terraform-aws-modules/security-group/aws"
+  version     = "~> 4.0"
+  
+  description         = "Security group for the gitlab ELB"
+  name                = "${var.environment}-alb"
+  vpc_id              = var.vpc_id
+  ingress_cidr_blocks = var.ingress_cidr_blocks
+  ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp"]
   egress_rules        = ["all-all"]
 }
 
@@ -119,7 +95,7 @@ resource "aws_launch_configuration" "this" {
   image_id                    = var.ami_id
   instance_type               = var.instance_type
   name_prefix                 = "${var.environment}-gitlab"
-  security_groups             = [module.security_group_gitlab_alb.security_group_id]
+  security_groups             = [module.security_group_alb.security_group_id]
   key_name                    = "${var.environment}-gitlab"
   associate_public_ip_address = true
   user_data                   = templatefile("${path.module}/templates/user_data.tpl", 
@@ -134,19 +110,19 @@ resource "aws_launch_configuration" "this" {
   }
 }
 
-resource "aws_s3_bucket" "gitlab" {
-  bucket = "${var.environment}-${var.project}-gitlab"
+resource "aws_s3_bucket" "this" {
+  bucket = "${var.environment}-gitlab"
 }
 
-resource "aws_s3_bucket_acl" "gitlab" {
-  bucket = aws_s3_bucket.gitlab.id
+resource "aws_s3_bucket_acl" "this" {
+  bucket = aws_s3_bucket.this.id
   acl    = "private"
 }
 
 resource "aws_s3_object" "docker_compose" {
-  bucket = aws_s3_bucket.gitlab.bucket
+  bucket = aws_s3_bucket.this.bucket
   key    = "docker-compose.yml"
-  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { compose_cidr = var.compose_cidr })
+  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { hostname = var.domain })
 }
 
 resource "aws_iam_instance_profile" "this" {
@@ -183,8 +159,8 @@ resource "aws_iam_role_policy" "this" {
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": [
-              "arn:aws:s3:::${aws_s3_bucket.gitlab.bucket}",
-              "arn:aws:s3:::${aws_s3_bucket.gitlab.bucket}/*"
+              "arn:aws:s3:::${aws_s3_bucket.this.bucket}",
+              "arn:aws:s3:::${aws_s3_bucket.this.bucket}/*"
             ]
         }
     ]
