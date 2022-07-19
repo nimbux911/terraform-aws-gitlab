@@ -104,7 +104,7 @@ resource "aws_launch_configuration" "this" {
       docker_compose_yml = base64encode(templatefile("${path.module}/templates/docker-compose.yml.tpl", 
         {
           hostname = "gitlab.${var.domain}"
-        }))
+        })),
       install_script = filebase64("${path.module}/templates/install.sh.tpl")
     }
   )
