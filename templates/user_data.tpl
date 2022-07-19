@@ -13,4 +13,4 @@ write_files:
     encoding: b64
 
 runcmd:
-  - /home/ubuntu/gitlab/install.sh
+  - [ bash, /home/ubuntu/gitlab/install.sh ]

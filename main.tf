@@ -105,7 +105,7 @@ resource "aws_launch_configuration" "this" {
         {
           hostname = "gitlab.${var.domain}"
         })),
-      install_script = filebase64("${path.module}/templates/install.sh.tpl")
+      install_script = base64encode(templatefile("${path.module}/templates/install.sh.tpl"))
     }
   )
   lifecycle {
