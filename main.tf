@@ -122,7 +122,7 @@ resource "aws_s3_bucket_acl" "this" {
 resource "aws_s3_object" "docker_compose" {
   bucket = aws_s3_bucket.this.bucket
   key    = "docker-compose.yml"
-  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { hostname = var.domain })
+  content = templatefile("${path.module}/templates/docker-compose.yml.tpl", { hostname = "gitlab.${var.domain}" })
 }
 
 resource "aws_iam_instance_profile" "this" {
