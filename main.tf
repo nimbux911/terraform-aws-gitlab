@@ -17,6 +17,7 @@ resource "aws_ssm_parameter" "public_key" {
 resource "aws_ssm_parameter" "private_key" {
   name  = "${var.environment}-gitlab-private-ssh-key"
   type  = "SecureString"
+  tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
 }
 
