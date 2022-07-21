@@ -5,3 +5,7 @@ variable "vpc_id" {}
 variable "ami_id" {}
 variable "instance_type" {}
 variable "ingress_cidr_blocks" {}
+variable "zone_id" {}
+variable "email" {}
+variable "dns" {}
+

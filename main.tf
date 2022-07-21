@@ -1,3 +1,11 @@
+resource "aws_route53_record" "this" {
+  zone_id = var.zone_id
+  name    = "git.${var.domain}"
+  type    = "A"
+  ttl     = "300"
+  records = [aws_instance.this.private_ip]
+}
+
 resource "aws_key_pair" "this" {
   key_name   = "${var.environment}-gitlab"
   public_key = base64decode(aws_ssm_parameter.public_key.value)
@@ -21,91 +29,41 @@ resource "aws_ssm_parameter" "private_key" {
   value = base64encode(tls_private_key.this.private_key_pem)
 }
 
-module "alb" {
-  source  = "terraform-aws-modules/alb/aws"
-  version = "~> 6.0"
-  
-  name               = "${var.environment}-gitlab"
-  vpc_id             = var.vpc_id
-  subnets            = var.subnet_ids
-  internal           = true
-  security_groups    = [module.security_group_alb.security_group_id]
-  load_balancer_type = "application"
-  enable_cross_zone_load_balancing = true
 
-  target_groups = [
-    {
-      name             = "${var.environment}-gitlab"
-      backend_protocol = "HTTP"
-      backend_port     = 32080
-      target_type      = "instance"
-      health_check = {
-        enabled             = true
-        interval            = 30
-        path                = "/"
-        port                = "traffic-port"
-        healthy_threshold   = 3
-        unhealthy_threshold = 3
-        timeout             = 6
-        protocol            = "HTTP"
-        matcher             = "200,404"
-      }
-    }
-  ]
-
-  https_listeners = [
-    {
-      certificate_arn    = data.aws_acm_certificate.this.arn
-      port               = 443
-      protocol           = "HTTPS"
-      target_group_index = 0
-    }
-  ]
-
-}
-
-module "security_group_alb" {
+module "security_group_gitlab" {
   source      = "terraform-aws-modules/security-group/aws"
   version     = "~> 4.0"
   
-  description         = "Security group for the gitlab ELB"
-  name                = "${var.environment}-alb"
+  description         = "Security group for the gitlab EC2"
+  name                = "${var.environment}-gitlab"
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp"]
   egress_rules        = ["all-all"]
 }
 
-resource "aws_autoscaling_group" "this" {
-  desired_capacity     = 1
-  launch_configuration = aws_launch_configuration.this.id
-  max_size             = 1
-  min_size             = 1
-  name                 = "${var.environment}-gitlab"
-  vpc_zone_identifier  = [var.subnet_ids[0]]
-  health_check_type    = "EC2"
-  tag {
-    key                 = "Name"
-    value               = "${var.environment}-gitlab"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_launch_configuration" "this" {
+resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
-  image_id                    = var.ami_id
+  ami                         = var.ami_id
   instance_type               = var.instance_type
-  name_prefix                 = "${var.environment}-gitlab"
-  security_groups             = [module.security_group_alb.security_group_id]
+  tags                        = {
+    name = "${var.environment}-gitlab"
+  }
+  subnet_id                   = var.subnet_ids[0]
+  security_groups             = [module.security_group_gitlab.security_group_id]
   key_name                    = "${var.environment}-gitlab"
   associate_public_ip_address = true
   user_data                   = templatefile("${path.module}/resources/templates/user_data.tpl", 
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
-          hostname = "gitlab.${var.domain}"
+          hostname = "git.${var.domain}"
         })),
-      install_script = filebase64("${path.module}/resources/scripts/install.sh")
+      install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
+        {
+          email = var.email
+          dns = "git.${var.dns}"
+        }))
     }
   )
   lifecycle {
@@ -134,4 +92,36 @@ resource "aws_iam_role" "this" {
   ]
 }
 POLICY
+}
+
+resource "aws_iam_role_policy" "this" {
+  name   = "${var.environment}-gitlab"
+  role   = aws_iam_role.this.id
+  policy = <<-EOF
+{
+    "Version": "2012-10-17",
+    "Id": "certbot-dns-route53 sample policy",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "route53:ListHostedZones",
+                "route53:GetChange"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect" : "Allow",
+            "Action" : [
+                "route53:ChangeResourceRecordSets"
+            ],
+            "Resource" : [
+                "arn:aws:route53:::hostedzone/${var.zone_id}"
+            ]
+        }
+    ]
+}
+  EOF
 }
