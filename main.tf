@@ -62,7 +62,7 @@ resource "aws_instance" "this" {
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
           email = var.email
-          dns = "git.${var.dns}"
+          dns = "${var.dns}"
         }))
     }
   )
