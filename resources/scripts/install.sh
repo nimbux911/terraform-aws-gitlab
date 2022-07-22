@@ -6,6 +6,9 @@ usermod -aG docker ubuntu
 
 sudo certbot certonly --non-interactive --agree-tos --email ${email} --no-redirect --dns-route53 -d ${dns}
 sudo service docker restart
+sudo mkswap /dev/nvme1n1
+sudo swapon /dev/nvme1n1
+sudo echo "/dev/nvme1n1 none swap sw 0 0" >> /etc/fstab
 
 export GITLAB_HOME=/home/ubuntu/gitlab
 chown -R ubuntu:ubuntu /home/ubuntu/gitlab

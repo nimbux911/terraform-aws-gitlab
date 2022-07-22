@@ -14,3 +14,4 @@ write_files:
 
 runcmd:
   - [ bash, /home/ubuntu/gitlab/install.sh ]
+  

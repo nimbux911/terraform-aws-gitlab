@@ -49,10 +49,10 @@ resource "aws_instance" "this" {
   tags                        = {
     name = "${var.environment}-gitlab"
   }
-  subnet_id                   = var.subnet_ids[0]
+  subnet_id                   = var.private_subnet_ids[0]
   security_groups             = [module.security_group_gitlab.security_group_id]
   key_name                    = "${var.environment}-gitlab"
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   user_data                   = templatefile("${path.module}/resources/templates/user_data.tpl", 
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
@@ -62,13 +62,24 @@ resource "aws_instance" "this" {
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
           email = var.email
-          dns = "${var.dns}"
+          dns = var.dns
         }))
     }
   )
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_ebs_volume" "volume-swap" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = var.size
+}
+
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdh"
+  volume_id   = aws_ebs_volume.volume-swap.id
+  instance_id = aws_instance.this.id
 }
 
 resource "aws_iam_instance_profile" "this" {
