@@ -1,6 +1,6 @@
 resource "aws_route53_record" "this" {
   zone_id = var.zone_id
-  name    = "git.${var.domain}"
+  name    = "${var.domain}"
   type    = "A"
   ttl     = "300"
   records = [aws_instance.this.private_ip]
@@ -37,9 +37,21 @@ module "security_group_gitlab" {
   description         = "Security group for the gitlab EC2"
   name                = "${var.environment}-gitlab"
   vpc_id              = var.vpc_id
-  ingress_cidr_blocks = var.ingress_cidr_blocks
+  ingress_cidr_blocks = [var.ingress_cidr_blocks]
   ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp"]
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 2222
+      to_port     = 2222
+      protocol    = "tcp"
+      description = "New SSH"
+      cidr_blocks = var.ingress_cidr_blocks
+    }]
   egress_rules        = ["all-all"]
+}
+
+output "security_group_id" {
+  value       = module.security_group_gitlab.security_group_id
 }
 
 resource "aws_instance" "this" {
@@ -57,7 +69,7 @@ resource "aws_instance" "this" {
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
-          hostname = "git.${var.domain}"
+          hostname = "${var.domain}"
         })),
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
@@ -71,14 +83,14 @@ resource "aws_instance" "this" {
   }
 }
 
-resource "aws_ebs_volume" "volume-swap" {
+resource "aws_ebs_volume" "swap" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  size              = var.size
+  size              = var.volume_size
 }
 
-resource "aws_volume_attachment" "ebs_att" {
+resource "aws_volume_attachment" "swap" {
   device_name = "/dev/sdh"
-  volume_id   = aws_ebs_volume.volume-swap.id
+  volume_id   = aws_ebs_volume.swap.id
   instance_id = aws_instance.this.id
 }
 
@@ -111,7 +123,6 @@ resource "aws_iam_role_policy" "this" {
   policy = <<-EOF
 {
     "Version": "2012-10-17",
-    "Id": "certbot-dns-route53 sample policy",
     "Statement": [
         {
             "Effect": "Allow",

@@ -10,7 +10,7 @@ services:
         nginx['ssl_certificate'] = "/etc/gitlab/ssl/${hostname}.crt"
         nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/${hostname}.key"
     ports:
-      - '2222:22'
+      - '22:22'
       - '80:80'
       - '443:443'
     volumes:
