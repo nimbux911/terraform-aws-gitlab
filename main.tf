@@ -44,7 +44,7 @@ module "security_group_gitlab" {
       from_port   = 2222
       to_port     = 2222
       protocol    = "tcp"
-      description = "New SSH"
+      description = "SSH port override for host OS"
       cidr_blocks = var.ingress_cidr_blocks
     }]
   egress_rules        = ["all-all"]
@@ -74,7 +74,7 @@ resource "aws_instance" "this" {
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
           email = var.email
-          dns = var.dns
+          dns = var.domain
         }))
     }
   )
@@ -85,7 +85,7 @@ resource "aws_instance" "this" {
 
 resource "aws_ebs_volume" "swap" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  size              = var.volume_size
+  size              = var.swap_volume_size
 }
 
 resource "aws_volume_attachment" "swap" {

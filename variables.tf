@@ -7,5 +7,4 @@ variable "instance_type" {}
 variable "ingress_cidr_blocks" {}
 variable "zone_id" {}
 variable "email" {}
-variable "dns" {}
-variable "volume_size" {}
+variable "swap_volume_size" {}
