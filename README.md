@@ -52,3 +52,4 @@ module private_gitlab {
 | zone_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
 | email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
 | volue_size | Size in gb of the swap volume | `string` | `""` | yes |
+| gitlab_version | Gitlab image version to use for deploy | `string` | `"latest"` | no |

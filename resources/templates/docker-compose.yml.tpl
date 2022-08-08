@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   gitlab:
-    image: 'gitlab/gitlab-ce:latest'
+    image: 'gitlab/gitlab-ce:${image_version}'
     hostname: '${hostname}'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
