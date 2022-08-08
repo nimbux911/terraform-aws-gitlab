@@ -69,8 +69,8 @@ resource "aws_instance" "this" {
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
-          hostname = "${var.domain}"
-          image_version = "${var.gitlab_version}"
+          hostname = var.domain
+          image_version = var.gitlab_version
         })),
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
