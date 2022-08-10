@@ -11,3 +11,6 @@ variable "swap_volume_size" {}
 variable "gitlab_version" {
   default = "latest"
 }
+variable "source_security_group_id" {
+  default = ""
+}

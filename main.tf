@@ -48,6 +48,12 @@ module "security_group_gitlab" {
       cidr_blocks = var.ingress_cidr_blocks
     }]
   egress_rules        = ["all-all"]
+  ingress_with_source_security_group_id = [
+    {
+      rule                     = "https-443-tcp"
+      source_security_group_id = var.source_security_group_id
+    }
+  ]
 }
 
 output "security_group_id" {
