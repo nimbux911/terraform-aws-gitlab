@@ -52,9 +52,18 @@ module "security_group_gitlab" {
     {
       rule                     = "https-443-tcp"
       source_security_group_id = var.source_security_group_id
+    },
+    {
+      rule                     = "ssh-tcp"
+      source_security_group_id = var.source_security_group_id
+    },
+    {
+      rule                     = "openvpn-udp"
+      source_security_group_id = var.source_security_group_id
     }
   ]
 }
+
 
 output "security_group_id" {
   value       = module.security_group_gitlab.security_group_id
