@@ -39,7 +39,7 @@ module "security_group_gitlab" {
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = [var.ingress_cidr_blocks]
   ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp"]
-  ingress_with_cidr_blocks = [
+  ingress_with_cidr_blocks = length(ingress_cidr_blocks) == 0 ? [] : [
     {
       from_port   = 2222
       to_port     = 2222
