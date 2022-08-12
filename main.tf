@@ -100,7 +100,7 @@ resource "aws_iam_instance_profile" "this" {
 }
 
 resource "aws_iam_role" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-2-gitlab"
     assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -118,7 +118,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "this" {
-  name   = "${var.environment}-gitlab"
+  name   = "${var.environment}-2-gitlab"
   role   = aws_iam_role.this.id
   policy = <<-EOF
 {
