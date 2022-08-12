@@ -95,7 +95,7 @@ resource "aws_volume_attachment" "swap" {
 }
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-2-gitlab"
   role = aws_iam_role.this.name
 }
 
