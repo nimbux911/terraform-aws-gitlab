@@ -32,8 +32,7 @@ module private_gitlab {
     ingress_cidr_blocks = ["0.0.0.0/0"]
     zone_id = "Z05149662IBDII4KPR8MQ"
     email = "john.doe@example.com"
-    dns = "gitlab.example.com"
-    volume_size = "8"
+    swap_volume_size = "8"
 }
 ```
 
@@ -50,4 +49,4 @@ module private_gitlab {
 | ingress_cidr_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | `[]` | yes |
 | zone_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
 | email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
-| volue_size | Size in gb of the swap volume | `string` | `""` | yes |
+| swap_volume_size | Size in gb of the swap volume | `string` | `""` | yes |
