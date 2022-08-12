@@ -59,7 +59,7 @@ resource "aws_instance" "this" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
   tags                        = {
-    name = "${var.environment}-gitlab"
+    name = "${var.environment}-2-gitlab"
   }
   subnet_id                   = var.private_subnet_ids[0]
   security_groups             = [module.security_group_gitlab.security_group_id]
