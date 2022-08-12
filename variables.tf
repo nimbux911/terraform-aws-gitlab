@@ -8,3 +8,4 @@ variable "ingress_cidr_blocks" {}
 variable "zone_id" {}
 variable "email" {}
 variable "swap_volume_size" {}
+variable "dns" {}

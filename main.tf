@@ -1,6 +1,6 @@
 resource "aws_route53_record" "this" {
   zone_id = var.zone_id
-  name    = "${var.domain}"
+  name    = "${var.dns}"
   type    = "A"
   ttl     = "300"
   records = [aws_instance.this.private_ip]
@@ -69,12 +69,12 @@ resource "aws_instance" "this" {
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
-          hostname = "${var.domain}"
+          hostname = "${var.dns}"
         })),
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
           email = var.email
-          dns = var.domain
+          dns = var.dns
         }))
     }
   )

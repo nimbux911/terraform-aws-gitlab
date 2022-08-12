@@ -25,7 +25,6 @@ Future additions:
 module private_gitlab {
     source = "github.com/nimbux911/terraform-aws-gitlab.git?ref=N911-9555"
     environment = "ops"
-    domain = "gitlab.example.com"
     vpc_id = "vpc-1234567"
     subnet_ids = ["subnet-01a3f5a6b3231570f", "subnet-03310ccc0e2c89072", "subnet-02acbaf7116d9c1a9"]
     ami_id = "ami-052efd3df9dad4825"
@@ -43,7 +42,7 @@ module private_gitlab {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | environment | Environment name of the resources. | `string` | `""` | yes |
-| domain | The name that will be used to reach the gitlab page. | `string` | `""` | yes |
+| dns | The name that will be used to reach the gitlab page. | `string` | `""` | yes |
 | vpc\_id | VPC ID where OpenVPN will be deployed. | `string` | `""` | yes |
 | subnet\_ids | Public subnet ids from the designed VPC. | `list[string]` | `[]` | yes |
 | ami\_id | AMI ID to user for the OpenVPN EC2 instance. | `string` | `""` | yes |
