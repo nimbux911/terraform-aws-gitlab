@@ -10,7 +10,6 @@ variable "swap_volume_size" {}
 variable "dns" {}
 variable "backup_retention_days" {
     type = number
-    default = 7
 }
 
 variable "backup_schedule_frequency" {
