@@ -60,6 +60,7 @@ resource "aws_instance" "this" {
   instance_type               = var.instance_type
   tags                        = {
     name = "${var.environment}-2-gitlab"
+    Backup = "true"
   }
   subnet_id                   = var.private_subnet_ids[0]
   security_groups             = [module.security_group_gitlab.security_group_id]
@@ -146,4 +147,77 @@ resource "aws_iam_role_policy" "this" {
     ]
 }
   EOF
+}
+
+locals {
+  backups = {
+    schedule  = var.backup_schedule_frequency
+    retention = var.backup_retetion_days
+  }
+}
+
+resource "aws_backup_plan" "example-backup-plan" {
+  count             = var.configure_backups ? 1 : 0
+  name = var.backup_plan_name
+
+  rule {
+    rule_name         = var.backup_plan_rule_name
+    target_vault_name = "Default"
+    schedule          = local.backups.schedule
+    start_window      = 60
+    completion_window = 300
+
+    lifecycle {
+      delete_after = local.backups.retention
+    }
+  }
+}
+
+resource "aws_backup_selection" "example-server-backup-selection" {
+  count             = var.configure_backups ? 1 : 0
+  iam_role_arn      = aws_iam_role.example-aws-backup-service-role[0].arn
+  name              = var.backup_plan_resources_selection_name
+  plan_id           = aws_backup_plan.example-backup-plan[0].id
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = var.backup_plan_selection_key
+    value = var.backup_plan_selection_value
+  }
+}
+
+
+## IAM permissions
+
+resource "aws_iam_role" "example-aws-backup-service-role" {
+  count             = var.configure_backups ? 1 : 0
+  name = var.backup_plan_role_name
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "backup.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+
+}
+
+resource "aws_iam_role_policy_attachment" "example-backup-service-aws-backup-role-policy" {
+  count             = var.configure_backups ? 1 : 0
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  role       = aws_iam_role.example-aws-backup-service-role[0].name
+}
+
+resource "aws_iam_role_policy_attachment" "example-restore-service-aws-backup-role-policy" {
+  count             = var.configure_backups ? 1 : 0
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  role       = aws_iam_role.example-aws-backup-service-role[0].name
 }
