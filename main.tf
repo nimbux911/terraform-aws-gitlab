@@ -152,7 +152,7 @@ resource "aws_iam_role_policy" "this" {
 locals {
   backups = {
     schedule  = var.backup_schedule_frequency
-    retention = var.backup_retetion_days
+    retention = var.backup_retention_days
   }
 }
 
