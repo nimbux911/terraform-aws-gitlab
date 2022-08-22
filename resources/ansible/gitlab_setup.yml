@@ -1,0 +1,98 @@
+---
+
+- name: Network Getting Started First Playbook
+  connection: ansible.netcommon.network_cli
+  gather_facts: true
+  hosts: all
+  become: true
+  environment:
+    GITLAB_HOME: /home/ubuntu/gitlab
+  tasks:
+    - name: Packages Installation
+      apt:
+        update_cache: true
+        name:
+          - docker.io
+          - docker-compose
+          - awscli
+          - python3-certbot
+          - python3-certbot-dns-route53
+        state: present
+
+    - name: Editing user
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Creating ssl cert
+      command : sudo certbot certonly --non-interactive --agree-tos --email {{ email }} --no-redirect --dns-route53 -d {{ dns }}
+      args:
+        creates: /etc/letsencrypt/live/{{ dns }}/fullchain.pem
+
+    - name: Format swap device
+      command: mkswap /dev/nvme1n1
+      when: ansible_swaptotal_mb < 1
+
+    - name: Write swap entry in fstab
+      mount:
+        name: none
+        src: /dev/nvme1n1
+        fstype: swap
+        opts: sw
+        passno: "0"
+        dump: "0"
+        state: present
+
+    - name: Swap on new device
+      command: swapon -a
+      when: ansible_swaptotal_mb < 1
+
+    - name: Restart docker
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        daemon_reload: yes
+        enabled: true
+      with_items:
+        - docker
+
+    - name: Creating gitlab home dir
+      become: false
+      file:
+        path: /home/ubuntu/gitlab
+        state: directory
+
+    - name: Templating dockerfile
+      template: 
+        src: templates/docker-compose.j2
+        dest: /home/ubuntu/gitlab/docker-compose.yml
+
+    - name: Docker compose up
+      become: false
+      community.docker.docker_compose:
+        project_src: /home/ubuntu/gitlab
+        build: no
+      register: output
+
+    - name: Creating gitlab ssl dir
+      file:
+        path: /home/ubuntu/gitlab/config/ssl
+        state: directory
+
+    - name: Change gitlab ssl dir permissions
+      file:
+        path: /home/ubuntu/gitlab/config/ssl
+        mode: 0755
+
+    - name: Copy ssl certs
+      ansible.builtin.copy:
+        src: /etc/letsencrypt/live/{{ dns }}/fullchain.pem
+        dest: /home/ubuntu/gitlab/config/ssl/{{ dns }}.crt
+        remote_src: yes
+
+    - name: Copy ssl certs
+      ansible.builtin.copy:
+        src: /etc/letsencrypt/live/{{ dns }}/privkey.pem
+        dest: /home/ubuntu/gitlab/config/ssl/{{ dns }}.key
+        remote_src: yes

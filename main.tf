@@ -6,100 +6,31 @@ resource "aws_route53_record" "this" {
   records = [aws_instance.this.private_ip]
 }
 
-resource "aws_key_pair" "this" {
-  key_name   = "${var.environment}-gitlab"
-  public_key = base64decode(aws_ssm_parameter.public_key.value)
-}
-
-resource "tls_private_key" "this" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.environment}-gitlab-public-ssh-key"
-  type  = "SecureString"
-  value = base64encode(tls_private_key.this.public_key_openssh)
-}
-
-resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.environment}-gitlab-private-ssh-key"
-  type  = "SecureString"
-  tier  = "Advanced"
-  value = base64encode(tls_private_key.this.private_key_pem)
-}
-
-
-module "security_group_gitlab" {
-  source      = "terraform-aws-modules/security-group/aws"
-  version     = "~> 4.0"
-  
-  description         = "Security group for the gitlab EC2"
-  name                = "${var.environment}-gitlab"
-  vpc_id              = var.vpc_id
-  ingress_cidr_blocks = [var.ingress_cidr_blocks]
-  ingress_rules       = ["https-443-tcp", "ssh-tcp", "openvpn-udp"]
-  ingress_with_cidr_blocks = [
-    {
-      from_port   = 2222
-      to_port     = 2222
-      protocol    = "tcp"
-      description = "SSH port override for host OS"
-      cidr_blocks = var.ingress_cidr_blocks
-    }]
-
-  egress_rules        = ["all-all"]
-
-  ingress_with_source_security_group_id = [
-    {
-      rule                     = "https-443-tcp"
-      source_security_group_id = var.source_security_group_id
-    },
-    {
-      rule                     = "ssh-tcp"
-      source_security_group_id = var.source_security_group_id
-    },
-    {
-      rule                     = "openvpn-udp"
-      source_security_group_id = var.source_security_group_id
-    }
-  ]
-}
-
-
-
-
 output "security_group_id" {
-  value       = module.security_group_gitlab.security_group_id
+  value       = aws_security_group.gitlab.id
+}
+
+output "priv_key" {
+  value  = local_file.get_priv_key.content
 }
 
 resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  tags                        = {
-    name = "${var.environment}-gitlab"
-  }
   subnet_id                   = var.private_subnet_ids[0]
-  security_groups             = [module.security_group_gitlab.security_group_id]
-  key_name                    = "${var.environment}-gitlab"
+  vpc_security_group_ids      = [ aws_security_group.gitlab.id ]
+  key_name                    = var.gitlab_key_pair == {} ? "${var.environment}-gitlab" : var.gitlab_key_pair.key_pair_name
   associate_public_ip_address = false
-  user_data                   = templatefile("${path.module}/resources/templates/user_data.tpl", 
-    {
-      docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
-        {
-          hostname = var.domain
-          image_version = var.gitlab_version
-        })),
-      install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
-        {
-          email = var.email
-          dns = var.domain
-        }))
-    }
-  )
+
+  user_data                   = file("${path.module}/resources/scripts/install.sh")
+
   lifecycle {
     create_before_destroy = true
+  }
+
+  tags                        = {
+    Name = "${var.environment}-gitlab"
   }
 }
 

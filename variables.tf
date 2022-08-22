@@ -14,5 +14,8 @@ variable "gitlab_version" {
   default = "latest"
 }
 variable "source_security_group_id" {
-  default = ""
+  default = []
+}
+variable "gitlab_key_pair" {
+  default = {}
 }
