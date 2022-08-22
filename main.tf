@@ -22,6 +22,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = [ aws_security_group.gitlab.id ]
   key_name                    = var.gitlab_key_pair == {} ? "${var.environment}-gitlab" : var.gitlab_key_pair.key_pair_name
   associate_public_ip_address = false
+  volume_size                 = var.volume_size ? var.volume_size : null
 
   user_data                   = file("${path.module}/resources/scripts/install.sh")
 
