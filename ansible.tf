@@ -3,6 +3,8 @@ locals {
   hostname           = var.domain
   email              = var.email
   dns                = var.domain
+  db_host            = var.external_db.db_host
+  db_password        = var.external_db.db_password
   
 
   gitlab_rb_default = list( "external_url 'https://{{ hostname }}'",
@@ -11,10 +13,15 @@ locals {
                              "nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ hostname }}.key'"
                            )
 
-  gitlab_rb_random = list( "" )
+  gitlab_rb_external_db = var.external_db.db_host == "" ? list( "" ) : list( "postgresql['enable'] = false",
+                            "gitlab_rails['db_adapter'] = 'postgresql'",
+                            "gitlab_rails['db_encoding'] = 'unicode'",
+                            "gitlab_rails['db_host'] = '{{ db_host }}'",
+                            "gitlab_rails['db_password'] = '{{ db_password }}'"
+                          )
 
   # We merge all parameters to be passed to the env vat GITLAB_OMNIBUS_CONFIG
-  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_random)
+  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db)
 
   # And we conver that to a big string
   gitlab_rb_merged_stringed = join("\",\"", local.gitlab_rb_merged )
@@ -28,6 +35,8 @@ hostname : ${local.hostname}
 gitlab_version : ${local.gitlab_version}
 email : ${local.email}
 dns : ${var.domain}
+db_host : ${local.db_host}
+db_password : ${local.db_password}
 extra_conf : ["${local.gitlab_rb_merged_stringed}"] 
 EOF
 }
@@ -55,10 +64,8 @@ resource "local_file" "ansible_inventory" {
 resource "null_resource" "ansible" {
   depends_on = [ aws_instance.this, local_file.get_priv_key, local_file.ansible_inventory, local_file.ansible_extra_vars ]
 
-
-  
   connection {
-    timeout     = "30s"
+    timeout     = "180s"
     type        = "ssh"
     port        = "2222"
     user        = "ubuntu"
