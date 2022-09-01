@@ -102,7 +102,8 @@ resource "aws_iam_instance_profile" "this" {
 
 resource "aws_iam_role" "this" {
   name = "${var.environment}-2-gitlab"
-    assume_role_policy = <<POLICY
+  managed_policy_arns = [var.managed_policy_arns]
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -218,6 +219,6 @@ resource "aws_iam_role_policy_attachment" "example-backup-service-aws-backup-rol
 
 resource "aws_iam_role_policy_attachment" "example-restore-service-aws-backup-role-policy" {
   count             = var.configure_backups ? 1 : 0
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
   role       = aws_iam_role.example-aws-backup-service-role[0].name
 }
