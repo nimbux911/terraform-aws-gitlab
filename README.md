@@ -61,7 +61,7 @@ module private_gitlab {
 | zone_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
 | email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
 | swap_volume_size | Size in gb of the swap volume | `string` | `""` | yes |
-| configure_backups | Tell the module if you want to take a backup or not of the instance. Default: false | `bool` | `` | yes |
+| configure_backups | Tell the module if you want to take a backup or not of the instance. Default: false | `bool` | `false` | yes |
 | backup_schedule_frequency | Frequency of the backup to be taken | `string` | `""` | yes |
 | backup_plan_name | Name of the backup | `string` | `""` | yes |
 | backup_plan_rule_name | A display name for a backup rule | `string` | `""` | yes |
