@@ -31,3 +31,11 @@ variable "external_db" {
     db_password = ""
   }
 }
+
+variable "gitlab_conf_smtp" {
+  type = map
+  default = {
+    smtp_address = ""
+    smtp_port = ""
+  }
+}

@@ -5,6 +5,8 @@ locals {
   dns                = var.domain
   db_host            = var.external_db.db_host
   db_password        = var.external_db.db_password
+  smtp_address       = var.gitlab_conf_smtp.smtp_address
+  smtp_port          = var.gitlab_conf_smtp.smtp_port
   
 
   gitlab_rb_default = list( "external_url 'https://{{ hostname }}'",
@@ -20,8 +22,12 @@ locals {
                             "gitlab_rails['db_password'] = '{{ db_password }}'"
                           )
 
+  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address = "" ? list("") : list( "gitlab_rails['smtp_address'] = '{{ smtp_address }}',
+                     "gitlab_rails['smtp_port'] = '{{ smtp_port }}'
+                   )
+
   # We merge all parameters to be passed to the env vat GITLAB_OMNIBUS_CONFIG
-  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db)
+  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db, gitlab_rb_smtp)
 
   # And we conver that to a big string
   gitlab_rb_merged_stringed = join("\",\"", local.gitlab_rb_merged )
@@ -37,6 +43,8 @@ email : ${local.email}
 dns : ${var.domain}
 db_host : ${local.db_host}
 db_password : ${local.db_password}
+smtp_address : ${local.smtp_address}
+smtp_port : ${local.smtp_port}
 extra_conf : ["${local.gitlab_rb_merged_stringed}"] 
 EOF
 }
