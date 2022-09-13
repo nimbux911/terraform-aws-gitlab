@@ -45,3 +45,8 @@ variable "configure_backups" {
     type = bool
     default = false
 }
+
+variable "managed_policy_arns" {
+    type = list(string)
+    default = []
+}
