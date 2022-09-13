@@ -102,7 +102,7 @@ resource "aws_iam_instance_profile" "this" {
 
 resource "aws_iam_role" "this" {
   name = "${var.environment}-gitlab"
-  managed_policy_arns = [var.managed_policy_arns]
+  managed_policy_arns = var.managed_policy_arns
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
