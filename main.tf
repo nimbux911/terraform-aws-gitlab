@@ -7,7 +7,7 @@ resource "aws_route53_record" "this" {
 }
 
 resource "aws_key_pair" "this" {
-  key_name   = "${var.environment}-gitlab"
+  key_name   = "${var.environment}-gitlab2"
   public_key = base64decode(aws_ssm_parameter.public_key.value)
 }
 
@@ -17,13 +17,13 @@ resource "tls_private_key" "this" {
 }
 
 resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.environment}-gitlab-public-ssh-key"
+  name  = "${var.environment}-gitlab2-public-ssh-key"
   type  = "SecureString"
   value = base64encode(tls_private_key.this.public_key_openssh)
 }
 
 resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.environment}-gitlab-private-ssh-key"
+  name  = "${var.environment}-gitlab2-private-ssh-key"
   type  = "SecureString"
   tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
@@ -98,12 +98,12 @@ resource "aws_volume_attachment" "swap" {
 }
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-gitlab2"
   role = aws_iam_role.this.name
 }
 
 resource "aws_iam_role" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-gitlab2"
   managed_policy_arns = var.managed_policy_arns
   assume_role_policy = <<POLICY
 {
@@ -122,7 +122,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "this" {
-  name   = "${var.environment}-gitlab"
+  name   = "${var.environment}-gitlab2"
   role   = aws_iam_role.this.id
   policy = <<-EOF
 {
