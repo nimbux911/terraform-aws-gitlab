@@ -85,13 +85,15 @@ resource "aws_instance" "this" {
 }
 
 resource "aws_ebs_volume" "swap" {
+  count             = var.create_swap ? 1 : 0
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = var.swap_volume_size
 }
 
 resource "aws_volume_attachment" "swap" {
+  count       = var.create_swap ? 1 : 0
   device_name = "/dev/sdh"
-  volume_id   = aws_ebs_volume.swap.id
+  volume_id   = aws_ebs_volume.swap[0].id
   instance_id = aws_instance.this.id
 }
 

@@ -50,3 +50,8 @@ variable "managed_policy_arns" {
     type = list(string)
     default = []
 }
+
+variable "create_swap" {
+    type = bool
+    default = false
+}
