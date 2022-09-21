@@ -64,7 +64,7 @@ resource "aws_instance" "this" {
   }
   subnet_id                   = var.private_subnet_ids[0]
   security_groups             = [module.security_group_gitlab.security_group_id]
-  key_name                    = "${var.environment}-gitlab"
+  key_name                    = "${var.environment}-gitlab2"
   associate_public_ip_address = false
   user_data                   = templatefile("${path.module}/resources/templates/user_data.tpl", 
     {
