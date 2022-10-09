@@ -8,7 +8,8 @@ variable "vpc_id" {
     type = string
 }
 variable "instance_type" {
-    type = string
+    type    = string
+    default = "t3.micro"
 }
 variable "ingress_cidr_blocks" {
     type = list(string)
