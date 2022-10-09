@@ -23,16 +23,15 @@ Future additions:
 
 ```hcl
 module private_gitlab {
-    source = "github.com/nimbux911/terraform-aws-gitlab.git?ref=N911-9555"
-    environment = "ops"
-    vpc_id = "vpc-1234567"
-    subnet_ids = ["subnet-01a3f5a6b3231570f", "subnet-03310ccc0e2c89072", "subnet-02acbaf7116d9c1a9"]
-    ami_id = "ami-052efd3df9dad4825"
-    instance_type = "t3a.medium"
+    source              = "github.com/nimbux911/terraform-aws-gitlab.git?ref=N911-9555"
+    environment         = "ops"
+    vpc_id              = "vpc-1234567"
+    subnet_id           = "subnet-01a3f5a6b3231570f"
+    instance_type       = "t3a.medium"
     ingress_cidr_blocks = ["0.0.0.0/0"]
-    zone_id = "Z05149662IBDII4KPR8MQ"
-    email = "john.doe@example.com"
-    swap_volume_size = "8"
+    zone_id             = "Z05149662IBDII4KPR8MQ"
+    certbot_email       = "john.doe@example.com"
+    gitlab_volume_size  = 8
 }
 ```
 
@@ -41,12 +40,12 @@ module private_gitlab {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | environment | Environment name of the resources. | `string` | `""` | yes |
-| dns | The name that will be used to reach the gitlab page. | `string` | `""` | yes |
+| host\_domain | The name that will be used to reach the gitlab page. | `string` | `""` | yes |
 | vpc\_id | VPC ID where OpenVPN will be deployed. | `string` | `""` | yes |
 | subnet\_ids | Public subnet ids from the designed VPC. | `list[string]` | `[]` | yes |
 | ami\_id | AMI ID to user for the OpenVPN EC2 instance. | `string` | `""` | yes |
 | instance\_type | OpenVPN EC2 instance type. | `string` | `""` | yes |
-| ingress_cidr_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | `[]` | yes |
-| zone_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
-| email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
-| swap_volume_size | Size in gb of the swap volume | `string` | `""` | yes |
+| ingress\_cidr\_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | `[]` | yes |
+| zone\_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
+| certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
+| gitlab_volume_size | Size in gb of the gitlab volume | `string` | `""` | yes |

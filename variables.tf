@@ -1,10 +1,40 @@
-variable "environment" {}
-variable "private_subnet_ids" {}
-variable "vpc_id" {}
-variable "ami_id" {}
-variable "instance_type" {}
-variable "ingress_cidr_blocks" {}
-variable "zone_id" {}
-variable "email" {}
-variable "swap_volume_size" {}
-variable "dns" {}
+variable "environment" {
+    default = "test"
+}
+variable "subnet_id" {
+    type = string
+}
+variable "vpc_id" {
+    type = string
+}
+variable "instance_type" {
+    type = string
+}
+variable "ingress_cidr_blocks" {
+    type = list(string)
+}
+variable "zone_id" {
+    type = string
+}
+variable "certbot_email" {
+    type = string
+}
+variable "gitlab_volume_size" {
+    type    = number
+    default = 20
+}
+variable "host_domain" {
+    type = string
+}
+variable "backups_enabled" {
+    type    = bool
+    default = false
+}
+variable "retention_days" {
+    type    = number
+    default = null
+}
+variable "gitlab_snapshot_id" {
+    type    = string
+    default = null
+}

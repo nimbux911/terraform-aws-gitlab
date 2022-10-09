@@ -1,5 +1,6 @@
-## [1.0.0] - 2022-07-21
+## [1.0.0] - 2022-10-07
 
 ### Added
 
-- First version of the Gitlab module.
+- Self-hosted Gitlab Docker running on a EC2 instance.
+- Automated backups and restore

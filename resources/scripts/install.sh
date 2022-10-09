@@ -1,23 +1,45 @@
 #!/bin/bash
 
 apt-get update
-apt-get install docker.io docker-compose awscli python3-certbot python3-certbot-dns-route53 -y
+apt-get install jq docker.io docker-compose awscli python3-certbot python3-certbot-dns-route53 -y
 usermod -aG docker ubuntu
+service docker restart
 
-sudo certbot certonly --non-interactive --agree-tos --email ${email} --no-redirect --dns-route53 -d ${dns}
-sudo service docker restart
-sudo mkswap /dev/nvme1n1
-sudo swapon /dev/nvme1n1
-sudo echo "/dev/nvme1n1 none swap sw 0 0" >> /etc/fstab
-sudo echo "Port 2222" >> /etc/ssh/sshd_config
-sudo systemctl restart sshd
+certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
 
-export GITLAB_HOME=/home/ubuntu/gitlab
-chown -R ubuntu:ubuntu /home/ubuntu/gitlab
+export GITLAB_HOME="/srv/gitlab"
 
-cd /home/ubuntu/gitlab
+echo "export GITLAB_HOME=$GITLAB_HOME" >> /home/ubuntu/.profile
+echo "export GITLAB_HOME=$GITLAB_HOME" >> /root/.bashrc
+
+if [ "${make_fs}" == "true" ]; then
+    mkfs -t xfs /dev/nvme1n1
+fi
+
+FS_UUID=$(blkid |grep '/dev/nvme1n1' | awk '{print $2}')
+mkdir $GITLAB_HOME
+chown root:root $GITLAB_HOME
+echo "$FS_UUID $GITLAB_HOME xfs  defaults,nofail 0 2" >> /etc/fstab
+mount -a
+
+if [ ! -f $GITLAB_HOME/config/ssl/${host_domain}.crt ]; then
+    mkdir -p $GITLAB_HOME/config/ssl
+    chmod 755 $GITLAB_HOME/config/ssl
+    cp /etc/letsencrypt/live/${host_domain}/fullchain.pem $GITLAB_HOME/config/ssl/${host_domain}.crt
+    cp /etc/letsencrypt/live/${host_domain}/privkey.pem $GITLAB_HOME/config/ssl/${host_domain}.key
+fi
+
+if [ "${backups_enabled}" == "true" ]; then
+    echo "0 6 * * * /home/ubuntu/backup.sh" > mycron
+    crontab -u root mycron
+    rm mycron
+fi
+
+if [ ! -f $GITLAB_HOME/docker-compose.yml ]; then
+    cp /home/ubuntu/docker-compose.yml $GITLAB_HOME
+fi
+
+chown -R ubuntu:ubuntu /home/ubuntu
+
+cd $GITLAB_HOME
 docker-compose up -d 
-sudo mkdir -p /home/ubuntu/gitlab/config/ssl
-sudo chmod 755 ssl
-sudo cp /etc/letsencrypt/live/${dns}/fullchain.pem /home/ubuntu/gitlab/config/ssl/${dns}.crt
-sudo cp /etc/letsencrypt/live/${dns}/privkey.pem /home/ubuntu/gitlab/config/ssl/${dns}.key
