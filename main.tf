@@ -171,6 +171,11 @@ resource "aws_launch_template" "gitlab" {
           aws_region      = data.aws_region.current.name
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
+        })),
+      renew_script      = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
+        {
+          certbot_email   = var.certbot_email
+          host_domain     = var.host_domain
         }))
     }
   ))

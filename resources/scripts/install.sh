@@ -34,11 +34,14 @@ if [ ! -f $GITLAB_HOME/config/ssl/${host_domain}.crt ]; then
     cp /etc/letsencrypt/live/${host_domain}/privkey.pem $GITLAB_HOME/config/ssl/${host_domain}.key
 fi
 
+echo "30 5 * * * /home/ubuntu/renew.sh" > mycron
+
 if [ "${backups_enabled}" == "true" ]; then
-    echo "0 6 * * * /home/ubuntu/backup.sh" > mycron
-    crontab -u root mycron
-    rm mycron
+    echo "0 6 * * * /home/ubuntu/backup.sh" >> mycron
 fi
+
+crontab -u root mycron
+rm mycron
 
 if [ ! -f $GITLAB_HOME/docker-compose.yml ]; then
     cp /home/ubuntu/docker-compose.yml $GITLAB_HOME

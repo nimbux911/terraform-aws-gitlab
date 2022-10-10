@@ -57,3 +57,13 @@ module private_gitlab {
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
 | gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
+
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| security\_group\_id | Gitlab's security group ID. |
+| gitlab\_instance\_id | Gitlab's EC2 instance ID. |
+| launch\_template\_id | Gitlab's launch template ID. |
+| gitlab\_volume\_id | Gitlab's EBS volume ID. |
