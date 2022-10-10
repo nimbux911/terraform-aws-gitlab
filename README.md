@@ -13,7 +13,7 @@ Running this example creates a running instance of Gitlab with the following cha
    - Automated restore from snapshot
    - Automated certificate renew through certbot
    
-   Note: if you are testing the module and you use the same domain name (ex: gitlab.example.com) more than 5 times during a short term, certbot will fail and won't let you create/update certificates using the same domain name. There is a workaround in the [Letscenrypt Documentation]("https://letsencrypt.org/docs/duplicate-certificate-limit/")
+   Note: if you are testing the module and you use the same domain name (ex: gitlab.example.com) more than 5 times during a short term, certbot will fail and won't let you create/update certificates using the same domain name. There is a workaround in the [Letscenrypt Documentation](https://letsencrypt.org/docs/duplicate-certificate-limit/)
    
 Future additions:
 
