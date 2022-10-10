@@ -13,7 +13,7 @@ Running this example creates a running instance of Gitlab with the following cha
    - Automated restore from snapshot
    - Automated certificate renew through certbot
    
-   Note: if you are testing the module and you use the same domain name (ex: gitlab.example.com) more than 5 times during a short term, certbot will fail and won't let you create/update certificates using the same domain name. There is a workaround in the [Letscenrypt Documentation](https://letsencrypt.org/docs/duplicate-certificate-limit/)
+   Note: if you are testing the module and you use the same domain name (ex: gitlab.example.com) more than 5 times during a short term, certbot will fail and won't let you create/update certificates using the same domain name. There is a workaround in the [Letsencrypt Documentation](https://letsencrypt.org/docs/duplicate-certificate-limit/)
    
 Future additions:
 
@@ -50,9 +50,9 @@ module private_gitlab {
 | vpc\_id | ID of the VPC which the subnet belongs. | `string` | ` ` | yes |
 | subnet\_id | Subnet id where to place the EC2 instance. | `string` | ` ` | yes |
 | instance\_type | EC2 instance type. | `string` | `t3.micro` | no |
-| ingress\_cidr\_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | `[]` | yes |
-| zone\_id | Zone ID of the Route53 where the record will be created. | `string` | `""` | yes |
-| certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | `""` | yes |
+| ingress\_cidr\_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | ` ` | yes |
+| zone\_id | Zone ID of the Route53 where the record will be created. | `string` | ` ` | yes |
+| certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | ` ` | yes |
 | gitlab\_volume\_size | Size in gb of the gitlab volume | `number` | `20` | no |
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 

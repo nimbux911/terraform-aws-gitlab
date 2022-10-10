@@ -12,14 +12,19 @@ export GITLAB_HOME="/srv/gitlab"
 echo "export GITLAB_HOME=$GITLAB_HOME" >> /home/ubuntu/.profile
 echo "export GITLAB_HOME=$GITLAB_HOME" >> /root/.bashrc
 
+DEVICE=/dev/$(lsblk -J | jq -r '.blockdevices[] | select(.type | index("disk")) | select(has("children") | not) | select(.mountpoints | index(null)).name')
 if [ "${make_fs}" == "true" ]; then
-    mkfs -t xfs /dev/nvme1n1
+    mkfs -t xfs $DEVICE
 fi
 
-FS_UUID=$(blkid |grep '/dev/nvme1n1' | awk '{print $2}')
 mkdir $GITLAB_HOME
 chown root:root $GITLAB_HOME
+mount $DEVICE $GITLAB_HOME
+FS_UUID=$(blkid |grep "$DEVICE" | awk '{print $2}')
+
 echo "$FS_UUID $GITLAB_HOME xfs  defaults,nofail 0 2" >> /etc/fstab
+
+umount $GITLAB_HOME
 mount -a
 
 if [ ! -f $GITLAB_HOME/config/ssl/${host_domain}.crt ]; then
