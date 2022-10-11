@@ -1,6 +1,6 @@
 # AWS Gitlab Terraform Module
 
-Terraform module which runs gitlan on a single EC2 instance on AWS.
+Terraform module which runs Gitlab on a single EC2 instance on AWS.
 
 ## Current version
 
@@ -11,7 +11,7 @@ Running this example creates a running instance of Gitlab with the following cha
    - Gitlab is running on a single EC2 instance on AWS.
    - Automated backups using AWS Backup
    - Automated restore from snapshot
-   - Automated certificate renew through certbot
+   - Automated certificate renewal through certbot
    
    Note: if you are testing the module and you use the same domain name (ex: gitlab.example.com) more than 5 times during a short term, certbot will fail and won't let you create/update certificates using the same domain name. There is a workaround in the [Letsencrypt Documentation](https://letsencrypt.org/docs/duplicate-certificate-limit/)
    
