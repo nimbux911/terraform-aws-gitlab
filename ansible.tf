@@ -9,20 +9,20 @@ locals {
   smtp_port          = var.gitlab_conf_smtp.smtp_port
   
 
-  gitlab_rb_default = list( "external_url 'https://{{ hostname }}'",
+  gitlab_rb_default = tolist( "external_url 'https://{{ hostname }}'",
                              "letsencrypt['enable'] = false",
                              "nginx['ssl_certificate'] = '/etc/gitlab/ssl/{{ hostname }}.crt'",
                              "nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ hostname }}.key'"
                            )
 
-  gitlab_rb_external_db = var.external_db.db_host == "" ? list( "" ) : list( "postgresql['enable'] = false",
+  gitlab_rb_external_db = var.external_db.db_host == "" ? tolist( "" ) : tolist( "postgresql['enable'] = false",
                             "gitlab_rails['db_adapter'] = 'postgresql'",
                             "gitlab_rails['db_encoding'] = 'unicode'",
                             "gitlab_rails['db_host'] = '{{ db_host }}'",
                             "gitlab_rails['db_password'] = '{{ db_password }}'"
                           )
 
-  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address == "" ? list("") : list( "gitlab_rails['smtp_address'] = '{{ smtp_address }}'",
+  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address == "" ? tolist("") : tolist( "gitlab_rails['smtp_address'] = '{{ smtp_address }}'",
                      "gitlab_rails['smtp_port'] = '{{ smtp_port }}'"
                    )
 
