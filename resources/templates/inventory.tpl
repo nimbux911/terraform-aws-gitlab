@@ -1,4 +1,4 @@
-p10gitlab:
+gitlab:
   hosts:
     ${hostname}:
       ansible_port: 2222
