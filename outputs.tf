@@ -1,7 +1,3 @@
-output "security_group_id" {
-  value = module.security_group_gitlab.security_group_id
-}
-
 output "gitlab_instance_id" {
   value = aws_instance.this.id
 }
