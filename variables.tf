@@ -39,3 +39,23 @@ variable "gitlab_conf_smtp" {
     smtp_port = ""
   }
 }
+
+variable "backups_enabled" {
+    type    = bool
+    default = false
+}
+
+variable "retention_days" {
+    type    = number
+    default = null
+}
+
+variable "gitlab_snapshot_id" {
+    type    = string
+    default = null
+}
+
+variable "gitlab_volume_size" {
+    type    = number
+    default = 20
+}

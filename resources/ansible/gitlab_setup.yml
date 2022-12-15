@@ -95,4 +95,4 @@
       ansible.builtin.copy:
         src: /etc/letsencrypt/live/{{ dns }}/privkey.pem
         dest: /home/ubuntu/gitlab/config/ssl/{{ dns }}.key
-        remote_src: yes
+        remote_src: yes 
