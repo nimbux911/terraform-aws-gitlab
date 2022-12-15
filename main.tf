@@ -18,7 +18,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.this.name
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  subnet_id                   = var.private_subnet_ids[0]
+  subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [ aws_security_group.gitlab.id ]
   key_name                    = var.gitlab_key_pair == {} ? "${var.environment}-gitlab" : var.gitlab_key_pair.key_pair_name
   associate_public_ip_address = false

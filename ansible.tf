@@ -27,7 +27,7 @@ locals {
                    ])
 
   # We merge all parameters to be passed to the env vat GITLAB_OMNIBUS_CONFIG
-  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db, gitlab_rb_smtp)
+  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db, local.gitlab_rb_smtp)
 
   # And we conver that to a big string
   gitlab_rb_merged_stringed = join("\",\"", local.gitlab_rb_merged )
