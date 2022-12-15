@@ -150,7 +150,7 @@ resource "aws_iam_role_policy" "certbot_r53" {
             "Resource" : [
                 "arn:aws:route53:::hostedzone/${var.zone_id}"
             ]
-        }
+        }key_pair_name
     ]
   }
   EOF
