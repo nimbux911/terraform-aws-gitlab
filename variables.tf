@@ -60,7 +60,3 @@ variable "gitlab_volume_size" {
     type    = number
     default = 20
 }
-
-variable "host_domain" {
-    type = string
-}
