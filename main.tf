@@ -42,8 +42,8 @@ resource "aws_instance" "this" {
         })),
         renew_script      = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
         {
-          certbot_email   = var.certbot_email
-          host_domain     = var.host_domain
+          certbot_email   = var.email
+          host_domain     = var.domain
         }))
     }))
 
