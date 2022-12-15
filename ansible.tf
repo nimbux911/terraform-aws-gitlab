@@ -22,7 +22,7 @@ locals {
                             "gitlab_rails['db_password'] = '{{ db_password }}'"
                           )
 
-  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address = "" ? list("") : list( "gitlab_rails['smtp_address'] = '{{ smtp_address }}',
+  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address == "" ? list("") : list( "gitlab_rails['smtp_address'] = '{{ smtp_address }}',
                      "gitlab_rails['smtp_port'] = '{{ smtp_port }}'
                    )
 
