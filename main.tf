@@ -20,7 +20,7 @@ resource "aws_instance" "this" {
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = [ aws_security_group.gitlab.id ]
-  key_name                    = var.gitlab_key_pair == {} ? "${var.environment}-gitlab" : var.gitlab_key_pair.key_pair_name
+  key_name                    = aws_key_pair.this.key_name
   associate_public_ip_address = false
 
   root_block_device {
@@ -39,11 +39,6 @@ resource "aws_instance" "this" {
           aws_region      = data.aws_region.current.name
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
-        })),
-        renew_script      = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
-        {
-          certbot_email   = var.email
-          host_domain     = var.domain
         }))
     }))
 
