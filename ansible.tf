@@ -68,9 +68,13 @@ resource "local_file" "ansible_inventory" {
   filename = "${path.module}/resources/ansible/inventory.yml"
 }
 
+resource "time_sleep" "wait_20_seconds" {
+  depends_on = [aws_instance.this]
+  create_duration = "20s"
+}
 
 resource "null_resource" "ansible" {
-  depends_on = [ aws_instance.this, local_file.get_priv_key, local_file.ansible_inventory, local_file.ansible_extra_vars ]
+  depends_on = [ time_sleep.wait_20_seconds, local_file.get_priv_key, local_file.ansible_inventory, local_file.ansible_extra_vars ]
 
   connection {
     timeout     = "180s"
