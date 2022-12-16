@@ -14,24 +14,22 @@ output "priv_key" {
   value  = local_file.get_priv_key.content
 }
 
-resource "aws_instance" "this" {
-  iam_instance_profile        = aws_iam_instance_profile.this.name
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
-  subnet_id                   = var.subnet_id
-  vpc_security_group_ids      = [ aws_security_group.gitlab.id ]
-  key_name                    = aws_key_pair.this.key_name
-  associate_public_ip_address = false
+resource "aws_launch_template" "gitlab" {
+  name                                  = "${var.environment}-gitlab"
+  image_id                              = data.aws_ami.ubuntu.id
+  instance_type                         = var.instance_type
 
-  root_block_device {
-    volume_size = var.volume_size == null ? null : var.volume_size
-  }
+  key_name                              = aws_key_pair.this.key_name
+  ebs_optimized                         = true
 
-  # user_data                   = file("${path.module}/resources/scripts/install.sh")
-  user_data                             = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl",
+  user_data                             = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl", 
     {
-      install_script    = file("${path.module}/resources/scripts/install.sh"),
-      backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
+      install_script      = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
+        {
+          make_fs         = var.gitlab_snapshot_id == null ? true : false
+          backups_enabled = var.backups_enabled
+        })),
+      backup_script       = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {
           vol_arn         = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
           backup_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
@@ -40,19 +38,57 @@ resource "aws_instance" "this" {
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
         }))
-    }))
+    }
+  ))
+
+  network_interfaces {
+    subnet_id                   = var.subnet_id
+    security_groups             = [aws_security_group.gitlab.id]
+    associate_public_ip_address = false
+    delete_on_termination       = true
+  }
+
+  block_device_mappings {
+    device_name             = "/dev/sda1"
+    ebs {
+      volume_size           = 30
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
+  }
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.this.name
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags                        = {
+      Name = "${var.environment}-gitlab"
+    }
+  }
 
   lifecycle {
     create_before_destroy = true
   }
 
-  tags                        = {
-    Name = "${var.environment}-gitlab"
+  depends_on = [aws_ebs_volume.gitlab]
+}
+
+resource "aws_instance" "this" {
+  iam_instance_profile = aws_iam_instance_profile.this.name
+  launch_template {
+    id      = aws_launch_template.gitlab.id
+    version = "$Latest"
+  }
+  tags = {
+    Name        = "${var.environment}-gitlab"
     snapshot_id = var.gitlab_snapshot_id
   }
-
-  depends_on = [aws_ebs_volume.gitlab]
-
 }
 
 resource "aws_ebs_volume" "swap" {
@@ -117,37 +153,6 @@ resource "aws_iam_role_policy" "this" {
         }
     ]
 }
-  EOF
-}
-
-resource "aws_iam_role_policy" "certbot_r53" {
-  name   = "certbot-r53"
-  role   = aws_iam_role.this.id
-  policy = <<-EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "route53:ListHostedZones",
-                "route53:GetChange"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Effect" : "Allow",
-            "Action" : [
-                "route53:ChangeResourceRecordSets"
-            ],
-            "Resource" : [
-                "arn:aws:route53:::hostedzone/${var.zone_id}"
-            ]
-        }
-    ]
-  }
   EOF
 }
 

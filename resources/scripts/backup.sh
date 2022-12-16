@@ -1,5 +1,5 @@
 #!/bin/bash
-export GITLAB_HOME=/srv/gitlab
+export GITLAB_HOME=/home/ubuntu/gitlab
 cd $GITLAB_HOME
 docker exec gitlab gitlab-ctl stop
 docker-compose down
