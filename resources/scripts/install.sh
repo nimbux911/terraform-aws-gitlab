@@ -35,6 +35,3 @@ crontab -u root mycron
 rm mycron
 
 chown -R ubuntu:ubuntu /home/ubuntu
-
-cd $GITLAB_HOME
-docker-compose up -d 
