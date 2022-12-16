@@ -87,7 +87,7 @@ resource "null_resource" "ansible" {
   }
 
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ${path.module}/resources/templates/inventory.tpl -e ${path.module}/resources/ansible/extra_vars.yml ${path.module}/resources/ansible/gitlab_setup.yml"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ${path.module}/resources/templates/inventory.tpl -e @${path.module}/resources/ansible/extra_vars.yml ${path.module}/resources/ansible/gitlab_setup.yml"
 
   }
 }
