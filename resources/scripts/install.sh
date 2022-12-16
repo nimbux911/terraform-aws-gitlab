@@ -2,6 +2,9 @@
 
 # Move ssh service to port 2222
 
+apt-get update
+apt-get install ansible ansible-core
+
 echo "Port 2222" >> /etc/ssh/sshd_config
 echo "PubkeyAcceptedKeyTypes +ssh-rsa" >> /etc/ssh/sshd_config
 

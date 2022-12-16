@@ -59,7 +59,3 @@ variable "gitlab_volume_size" {
     type    = number
     default = 20
 }
-
-variable "image_id" {
-  
-}

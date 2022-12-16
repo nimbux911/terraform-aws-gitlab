@@ -16,7 +16,7 @@ output "priv_key" {
 
 resource "aws_launch_template" "gitlab" {
   name                                  = "${var.environment}-gitlab"
-  image_id                              = var.image_id
+  image_id                              = data.aws_ami.ubuntu.id
   instance_type                         = var.instance_type
 
   key_name                              = aws_key_pair.this[0].key_name
