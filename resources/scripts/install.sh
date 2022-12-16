@@ -37,5 +37,4 @@ rm mycron
 chown -R ubuntu:ubuntu /home/ubuntu
 
 cd $GITLAB_HOME
-docker-compose down
 docker-compose up -d 
