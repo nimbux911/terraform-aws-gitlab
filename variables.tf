@@ -1,7 +1,6 @@
 variable "environment" {}
 variable "domain" {}
 variable "vpc_id" {}
-variable "ami_id" {}
 variable "instance_type" {}
 variable "ingress_cidr_blocks" {
   default = []
