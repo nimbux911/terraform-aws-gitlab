@@ -5,6 +5,8 @@
 apt-get update
 apt-get install ansible -y
 
+export ANSIBLE_HOST_KEY_CHECKING=False
+
 echo "Port 2222" >> /etc/ssh/sshd_config
 echo "PubkeyAcceptedKeyTypes +ssh-rsa" >> /etc/ssh/sshd_config
 
