@@ -91,4 +91,3 @@ resource "null_resource" "ansible" {
 
   }
 }
-c
