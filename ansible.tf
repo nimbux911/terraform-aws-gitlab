@@ -36,7 +36,7 @@ EOF
 }
 
 resource "local_file" "get_priv_key" {
-  content = base64decode(data.aws_ssm_parameter.key_pair[0].value)
+  content = base64decode(aws_ssm_parameter.private_key[0].value)
   filename = "${path.module}/resources/ansible/gitlab_priv_key"
   file_permission = "0600"
 }
