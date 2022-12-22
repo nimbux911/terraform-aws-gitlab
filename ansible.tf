@@ -62,7 +62,7 @@ resource "null_resource" "ansible" {
     type        = "ssh"
     port        = "2222"
     user        = "ubuntu"
-    private_key = base64decode(data.aws_ssm_parameter.key_pair[0].value)
+    private_key = base64decode(aws_ssm_parameter.private_key[0].value)
     host        = var.domain
   }
 
