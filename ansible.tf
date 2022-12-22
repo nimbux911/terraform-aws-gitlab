@@ -3,36 +3,25 @@ locals {
   hostname           = var.domain
   email              = var.email
   dns                = var.domain
-  db_host            = var.external_db.db_host
-  db_password        = var.external_db.db_password
-  smtp_address       = var.gitlab_conf_smtp.smtp_address
-  smtp_port          = var.gitlab_conf_smtp.smtp_port
+  json_max_file      = var.json_max_file == "" ? "" : var.json_max_file
   
+  gitlab_rb_default = tolist(["external_url 'https://{{ hostname }}'",
+                              "letsencrypt['enable'] = false",
+                              "nginx['ssl_certificate'] = '/etc/gitlab/ssl/{{ hostname }}.crt'",
+                              "nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ hostname }}.key'"
+                             ])
 
-  gitlab_rb_default = list( "external_url 'https://{{ hostname }}'",
-                             "letsencrypt['enable'] = false",
-                             "nginx['ssl_certificate'] = '/etc/gitlab/ssl/{{ hostname }}.crt'",
-                             "nginx['ssl_certificate_key'] = '/etc/gitlab/ssl/{{ hostname }}.key'"
-                           )
 
-  gitlab_rb_external_db = var.external_db.db_host == "" ? list( "" ) : list( "postgresql['enable'] = false",
-                            "gitlab_rails['db_adapter'] = 'postgresql'",
-                            "gitlab_rails['db_encoding'] = 'unicode'",
-                            "gitlab_rails['db_host'] = '{{ db_host }}'",
-                            "gitlab_rails['db_password'] = '{{ db_password }}'"
-                          )
+  gitlab_extraconf = flatten([ for option_name, option_value in var.gitlab_rb_extra_conf : [
+                                 for key, value in option_value:
+                                   "${option_name}['${key}'] = ${value}"
+                               ]
+                             ])
 
-  gitlab_rb_smtp = var.gitlab_conf_smtp.smtp_address = "" ? list("") : list( "gitlab_rails['smtp_address'] = '{{ smtp_address }}',
-                     "gitlab_rails['smtp_port'] = '{{ smtp_port }}'
-                   )
+  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_extraconf )
 
-  # We merge all parameters to be passed to the env vat GITLAB_OMNIBUS_CONFIG
-  gitlab_rb_merged = concat(local.gitlab_rb_default, local.gitlab_rb_external_db, gitlab_rb_smtp)
-
-  # And we conver that to a big string
   gitlab_rb_merged_stringed = join("\",\"", local.gitlab_rb_merged )
 }
-
 
 resource "local_file" "ansible_extra_vars" {
   filename = "${path.module}/resources/ansible/extra_vars.yml"
@@ -40,11 +29,8 @@ resource "local_file" "ansible_extra_vars" {
 hostname : ${local.hostname}
 gitlab_version : ${local.gitlab_version}
 email : ${local.email}
-dns : ${var.domain}
-db_host : ${local.db_host}
-db_password : ${local.db_password}
-smtp_address : ${local.smtp_address}
-smtp_port : ${local.smtp_port}
+dns : ${local.dns}
+json_max_file : ${local.json_max_file}
 extra_conf : ["${local.gitlab_rb_merged_stringed}"] 
 EOF
 }
@@ -67,7 +53,6 @@ resource "local_file" "ansible_inventory" {
   content = data.template_file.ansible_inventory_template.rendered
   filename = "${path.module}/resources/ansible/inventory.yml"
 }
-
 
 resource "null_resource" "ansible" {
   depends_on = [ aws_instance.this, local_file.get_priv_key, local_file.ansible_inventory, local_file.ansible_extra_vars ]

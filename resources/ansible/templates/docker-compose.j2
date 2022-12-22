@@ -17,3 +17,9 @@ services:
       - '$GITLAB_HOME/logs:/var/log/gitlab'
       - '$GITLAB_HOME/data:/var/opt/gitlab'
     restart: always
+{% if json_max_file %}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '{{ json_max_file }}'
+{% endif %}

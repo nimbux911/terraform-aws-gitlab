@@ -24,18 +24,11 @@ variable "source_security_group_id" {
 variable "gitlab_key_pair" {
   default = {}
 }
-variable "external_db" {
-  type = map
-  default = {
-    db_host = ""
-    db_password = ""
-  }
+
+variable "json_max_file" {
+  default = ""
 }
 
-variable "gitlab_conf_smtp" {
-  type = map
-  default = {
-    smtp_address = ""
-    smtp_port = ""
-  }
+variable "gitlab_rb_extra_conf" {
+  default = {}
 }
