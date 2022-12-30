@@ -257,6 +257,11 @@ resource "aws_volume_attachment" "gitlab" {
   instance_id = aws_instance.this.id
 }
 
+resource "aws_ebs_volume" "swap" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = var.swap_volume_size
+}
+
 resource "aws_volume_attachment" "swap" {
   device_name = "/dev/sdj"
   volume_id   = aws_ebs_volume.swap.id
