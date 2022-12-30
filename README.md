@@ -58,7 +58,7 @@ module private_gitlab {
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
 | gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
-| swap\_volume\_size | Size in gb of the swap volume | `number` | `""` | yes |
+| swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
 
 
 ## Outputs

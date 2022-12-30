@@ -41,5 +41,5 @@ variable "gitlab_snapshot_id" {
 }
 variable "swap_volume_size" {
     type    = number
-    default = null
+    default = 8
 }
