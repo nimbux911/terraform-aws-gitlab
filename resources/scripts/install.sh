@@ -7,6 +7,10 @@ service docker restart
 
 certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
 
+mkswap /dev/nvme1n1
+swapon /dev/nvme1n1
+echo "/dev/nvme1n1 none swap sw 0 0" >> /etc/fstab
+
 export GITLAB_HOME="/srv/gitlab"
 
 echo "export GITLAB_HOME=$GITLAB_HOME" >> /home/ubuntu/.profile
