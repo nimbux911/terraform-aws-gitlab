@@ -257,4 +257,8 @@ resource "aws_volume_attachment" "gitlab" {
   instance_id = aws_instance.this.id
 }
 
-
+resource "aws_volume_attachment" "swap" {
+  device_name = "/dev/sdj"
+  volume_id   = aws_ebs_volume.swap.id
+  instance_id = aws_instance.this.id
+}
