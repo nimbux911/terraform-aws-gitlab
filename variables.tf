@@ -39,4 +39,7 @@ variable "gitlab_snapshot_id" {
     type    = string
     default = null
 }
-variable "swap_volume_size" {}
+variable "swap_volume_size" {
+    type    = number
+    default = null
+}

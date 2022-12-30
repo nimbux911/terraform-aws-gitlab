@@ -161,6 +161,7 @@ resource "aws_launch_template" "gitlab" {
           certbot_email   = var.certbot_email
           host_domain     = var.host_domain
           make_fs         = var.gitlab_snapshot_id == null ? true : false
+          swap            = var.swap_volume_size
           backups_enabled = var.backups_enabled
         })),
       backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
