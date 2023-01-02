@@ -1,5 +1,5 @@
 locals {
-   swap_size = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
+   swap_size = var.swap_volume_size == var.test_gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
 }
 
 resource "aws_route53_record" "this" {
@@ -11,7 +11,7 @@ resource "aws_route53_record" "this" {
 }
 
 resource "aws_key_pair" "this" {
-  key_name   = "${var.environment}-gitlab"
+  key_name   = "${var.environment}-test_gitlab"
   public_key = base64decode(aws_ssm_parameter.public_key.value)
 }
 
@@ -21,25 +21,25 @@ resource "tls_private_key" "this" {
 }
 
 resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.environment}-gitlab-public-ssh-key"
+  name  = "${var.environment}-test_gitlab-public-ssh-key"
   type  = "SecureString"
   value = base64encode(tls_private_key.this.public_key_openssh)
 }
 
 resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.environment}-gitlab-private-ssh-key"
+  name  = "${var.environment}-test_gitlab-private-ssh-key"
   type  = "SecureString"
   tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
 }
 
 
-module "security_group_gitlab" {
+module "security_group_test_gitlab" {
   source      = "terraform-aws-modules/security-group/aws"
   version     = "~> 4.0"
   
-  description         = "Security group for the gitlab EC2"
-  name                = "${var.environment}-gitlab"
+  description         = "Security group for the test_gitlab EC2"
+  name                = "${var.environment}-test_gitlab"
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp"]
@@ -55,19 +55,19 @@ module "security_group_gitlab" {
   egress_rules        = ["all-all"]
 }
 
-resource "aws_backup_vault" "gitlab" {
+resource "aws_backup_vault" "test_gitlab" {
   count = var.backups_enabled ? 1 : 0
-  name  = "${var.environment}-gitlab"
+  name  = "${var.environment}-test_gitlab"
 }
 
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-test_gitlab"
   role = aws_iam_role.this.name
 }
 
 resource "aws_iam_role" "this" {
-  name = "${var.environment}-gitlab"
+  name = "${var.environment}-test_gitlab"
     assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -115,7 +115,7 @@ resource "aws_iam_role_policy" "certbot_r53" {
   EOF
 }
 
-resource "aws_iam_role_policy" "gitlab_backup" {
+resource "aws_iam_role_policy" "test_gitlab_backup" {
   count   = var.backups_enabled ? 1 : 0
   name    = "backup"
   role    = aws_iam_role.this.id
@@ -131,7 +131,7 @@ resource "aws_iam_role_policy" "gitlab_backup" {
                 "backup:StartBackupJob"
             ],
             "Resource": [
-                "${aws_backup_vault.gitlab[0].arn}",
+                "${aws_backup_vault.test_gitlab[0].arn}",
                 "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
             ]
         },
@@ -146,8 +146,8 @@ resource "aws_iam_role_policy" "gitlab_backup" {
   EOF
 }
 
-resource "aws_launch_template" "gitlab" {
-  name                                  = "${var.environment}-gitlab"
+resource "aws_launch_template" "test_gitlab" {
+  name                                  = "${var.environment}-test_gitlab"
   image_id                              = data.aws_ami.ubuntu.id
   instance_type                         = var.instance_type
 
@@ -164,15 +164,15 @@ resource "aws_launch_template" "gitlab" {
         {
           certbot_email   = var.certbot_email
           host_domain     = var.host_domain
-          make_fs         = var.gitlab_snapshot_id == null ? true : false
+          make_fs         = var.test_gitlab_snapshot_id == null ? true : false
           swap            = local.swap_size
           backups_enabled = var.backups_enabled
         })),
       backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {
-          vol_arn         = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
+          vol_arn         = var.test_gitlab_snapshot_id != null ? aws_ebs_volume.test_gitlab_snapshot[0].arn : aws_ebs_volume.test_gitlab.arn
           backup_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
-          vault_name      = aws_backup_vault.gitlab[0].id
+          vault_name      = aws_backup_vault.test_gitlab[0].id
           aws_region      = data.aws_region.current.name
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
@@ -187,7 +187,7 @@ resource "aws_launch_template" "gitlab" {
 
   network_interfaces {
     subnet_id                   = var.subnet_id
-    security_groups             = [module.security_group_gitlab.security_group_id]
+    security_groups             = [module.security_group_test_gitlab.security_group_id]
     associate_public_ip_address = false
     delete_on_termination       = true
   }
@@ -212,7 +212,7 @@ resource "aws_launch_template" "gitlab" {
   tag_specifications {
     resource_type = "instance"
     tags                        = {
-      Name = "${var.environment}-gitlab"
+      Name = "${var.environment}-test_gitlab"
     }
   }
 
@@ -220,45 +220,45 @@ resource "aws_launch_template" "gitlab" {
     create_before_destroy = true
   }
 
-  depends_on = [aws_ebs_volume.gitlab]
+  depends_on = [aws_ebs_volume.test_gitlab]
 }
 
-resource "aws_ebs_volume" "gitlab" {
+resource "aws_ebs_volume" "test_gitlab" {
   availability_zone = data.aws_subnet.selected.availability_zone
-  size              = var.gitlab_volume_size
+  size              = var.test_gitlab_volume_size
   tags = {
-    Name = "${var.environment}-gitlab"
+    Name = "${var.environment}-test_gitlab"
   }
 }
 
 
-resource "aws_ebs_volume" "gitlab_snapshot" {
-  count             = var.gitlab_snapshot_id != null ? 1 : 0
+resource "aws_ebs_volume" "test_gitlab_snapshot" {
+  count             = var.test_gitlab_snapshot_id != null ? 1 : 0
   availability_zone = data.aws_subnet.selected.availability_zone
-  size              = var.gitlab_volume_size
-  snapshot_id       = var.gitlab_snapshot_id
+  size              = var.test_gitlab_volume_size
+  snapshot_id       = var.test_gitlab_snapshot_id
   tags = {
-    Name        = "${var.environment}-gitlab-snapshot"
-    snapshot_id = var.gitlab_snapshot_id
+    Name        = "${var.environment}-test_gitlab-snapshot"
+    snapshot_id = var.test_gitlab_snapshot_id
   }
 }
 
 resource "aws_instance" "this" {
   iam_instance_profile = aws_iam_instance_profile.this.name
   launch_template {
-    id      = aws_launch_template.gitlab.id
+    id      = aws_launch_template.test_gitlab.id
     version = "$Latest"
   }
   tags = {
-    Name        = "${var.environment}-gitlab"
-    snapshot_id = var.gitlab_snapshot_id
+    Name        = "${var.environment}-test_gitlab"
+    snapshot_id = var.test_gitlab_snapshot_id
   }
 }
 
 
-resource "aws_volume_attachment" "gitlab" {
+resource "aws_volume_attachment" "test_gitlab" {
   device_name = "/dev/sdh"
-  volume_id   = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id
+  volume_id   = var.test_gitlab_snapshot_id != null ? aws_ebs_volume.test_gitlab_snapshot[0].id : aws_ebs_volume.test_gitlab.id
   instance_id = aws_instance.this.id
 }
 

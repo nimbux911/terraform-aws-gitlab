@@ -20,7 +20,7 @@ variable "zone_id" {
 variable "certbot_email" {
     type = string
 }
-variable "gitlab_volume_size" {
+variable "test_gitlab_volume_size" {
     type    = number
     default = 20
 }
@@ -35,7 +35,7 @@ variable "retention_days" {
     type    = number
     default = null
 }
-variable "gitlab_snapshot_id" {
+variable "test_gitlab_snapshot_id" {
     type    = string
     default = null
 }
