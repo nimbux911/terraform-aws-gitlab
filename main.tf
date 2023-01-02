@@ -1,3 +1,7 @@
+locals {
+   swap_size = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
+}
+
 resource "aws_route53_record" "this" {
   zone_id = var.zone_id
   name    = var.host_domain
@@ -161,6 +165,7 @@ resource "aws_launch_template" "gitlab" {
           certbot_email   = var.certbot_email
           host_domain     = var.host_domain
           make_fs         = var.gitlab_snapshot_id == null ? true : false
+          swap            = local.swap_size
           backups_enabled = var.backups_enabled
         })),
       backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
@@ -257,4 +262,13 @@ resource "aws_volume_attachment" "gitlab" {
   instance_id = aws_instance.this.id
 }
 
+resource "aws_ebs_volume" "swap" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = local.swap_size
+}
 
+resource "aws_volume_attachment" "swap" {
+  device_name = "/dev/sdj"
+  volume_id   = aws_ebs_volume.swap.id
+  instance_id = aws_instance.this.id
+}

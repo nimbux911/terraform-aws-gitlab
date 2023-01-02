@@ -7,6 +7,19 @@ service docker restart
 
 certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
 
+SIZE=$(fdisk -l | grep nvme1n1 | awk '{ print $3 }')
+if [ "$SIZE" == "${swap}" ]; then
+    mkswap /dev/nvme1n1
+    swapon /dev/nvme1n1
+    echo "/dev/nvme1n1 none swap sw 0 0" >> /etc/fstab
+else
+    mkswap /dev/nvme2n1
+    swapon /dev/nvme2n1
+    echo "/dev/nvme2n1 none swap sw 0 0" >> /etc/fstab
+fi
+
+
+
 export GITLAB_HOME="/srv/gitlab"
 
 echo "export GITLAB_HOME=$GITLAB_HOME" >> /home/ubuntu/.profile
