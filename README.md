@@ -9,6 +9,8 @@ Running this example creates a running instance of Gitlab with the following cha
    - Docker, docker-compose and certbot are installed during the deployment.
    - Certbot uses the dns-route53 plugin to create the certificate for the required domain. 
    - Gitlab is running on a single EC2 instance on AWS.
+   - By default EC2 instances have port 22 taken for SSH access. So **port 2222** is used instead for git access. You can see this configured in [docker-compose.tpl](./resources/templates/docker-compose.yml.tpl)
+   - **Port 443** is used for web access
    - Automated backups using AWS Backup
    - Automated restore from snapshot
    - Automated certificate renewal through certbot
