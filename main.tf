@@ -49,6 +49,12 @@ resource "aws_volume_attachment" "swap" {
   instance_id = aws_instance.this.id
 }
 
+resource "aws_backup_vault" "vault" {
+  force_destroy   = false
+  kms_key_arn     = data.aws_kms_key.default_backup_key.arn
+  name            = var.vault_name
+}
+
 resource "aws_iam_instance_profile" "this" {
   name = "${var.environment}-gitlab"
   role = aws_iam_role.this.name
@@ -101,4 +107,34 @@ resource "aws_iam_role_policy" "this" {
     ]
 }
   EOF
+}
+
+resource "aws_iam_role_policy" "gitlab_backup" {
+      name   = "backup" 
+      policy = jsonencode(
+            {
+              Statement = [
+                  {
+                      Action   = [
+                          "iam:PassRole",
+                          "backup:StartBackupJob",
+                        ]
+                      Effect   = "Allow"
+                      Resource = [
+                          "${aws_backup_vault.vault.arn}",
+                          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole",
+                        ]
+                      Sid      = "StartBackup"
+                    },
+                  {
+                      Action   = "backup:DescribeBackupJob"
+                      Effect   = "Allow"
+                      Resource = "*"
+                      Sid      = "DescribeJob"
+                    },
+                ]
+              Version   = "2012-10-17"
+            }
+        ) 
+      role   = aws_iam_role.this.id
 }

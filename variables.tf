@@ -32,3 +32,6 @@ variable "json_max_file" {
 variable "gitlab_rb_extra_conf" {
   default = {}
 }
+variable "vault_name" {
+    
+}
