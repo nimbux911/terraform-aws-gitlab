@@ -159,6 +159,7 @@ resource "aws_launch_template" "gitlab" {
       docker_compose_yml  = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
         {
           host_domain = var.host_domain
+          gitlab_container_name = var.gitlab_container_name
         })),
       install_script      = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
@@ -181,6 +182,7 @@ resource "aws_launch_template" "gitlab" {
         {
           certbot_email   = var.certbot_email
           host_domain     = var.host_domain
+          gitlab_container_name = var.gitlab_container_name
         }))
     }
   ))
