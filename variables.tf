@@ -43,3 +43,8 @@ variable "swap_volume_size" {
     type    = number
     default = 8
 }
+
+variable "gitlab_container_name" {
+    type = string
+    default = "gitlab"
+}

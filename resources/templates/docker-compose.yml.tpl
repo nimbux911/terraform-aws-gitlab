@@ -3,7 +3,7 @@ services:
   gitlab:
     image: 'gitlab/gitlab-ce:15.2.5-ce.0'
     hostname: '${host_domain}'
-    container_name: gitlab
+    container_name: ${gitlab_container_name}
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://${host_domain}'
