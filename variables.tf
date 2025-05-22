@@ -48,3 +48,8 @@ variable "gitlab_container_name" {
     type = string
     default = "gitlab"
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = {}
+}
