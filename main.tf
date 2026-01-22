@@ -37,13 +37,13 @@ resource "aws_ssm_parameter" "private_key" {
 module "security_group_gitlab" {
   source      = "terraform-aws-modules/security-group/aws"
   version     = "~> 4.0"
-  
+
   description         = "Security group for the gitlab EC2"
   name                = "${var.environment}-gitlab"
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp"]
-  ingress_with_cidr_blocks = [ for block in var.ingress_cidr_blocks: 
+  ingress_with_cidr_blocks = [ for block in var.ingress_cidr_blocks:
     {
       from_port   = 2222
       to_port     = 2222
@@ -154,12 +154,15 @@ resource "aws_launch_template" "gitlab" {
   key_name                              = aws_key_pair.this.key_name
   ebs_optimized                         = true
 
-  user_data                             = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl", 
+  user_data                             = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl",
     {
-      docker_compose_yml  = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl", 
+      docker_compose_yml  = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl",
         {
           host_domain = var.host_domain
           gitlab_container_name = var.gitlab_container_name
+          enable_s3_artifacts    = var.enable_s3_artifacts
+          bucket_name            = var.bucket_name
+          region                 = data.aws_region.current.name
         })),
       install_script      = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
