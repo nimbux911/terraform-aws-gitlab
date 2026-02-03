@@ -1,7 +1,13 @@
 #!/bin/bash
+set -x
+exec > /tmp/backup.log 2>&1
+date
 export GITLAB_HOME=/srv/gitlab
 cd $GITLAB_HOME
 docker exec gitlab gitlab-ctl stop
+while docker exec gitlab gitlab-ctl status 2>/dev/null | grep -q "run:"; do
+    sleep 5
+done
 docker-compose down
 vol_arn="${vol_arn}"
 iam_role_arn="${backup_role_arn}"

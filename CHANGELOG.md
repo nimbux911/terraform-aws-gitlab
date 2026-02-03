@@ -1,3 +1,9 @@
+## [1.1.1] - 2026-02-03
+
+- Fix backup script race condition when stopping GitLab containers.
+- Ensure GitLab services are fully stopped before docker-compose down.
+- Add logging to backup execution for easier troubleshooting.
+
 ## [1.1.0] - 2026-01-22
 
 - Allow configuring s3 storage for artifacts.
