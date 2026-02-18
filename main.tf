@@ -258,6 +258,7 @@ resource "aws_instance" "this" {
   lifecycle {
     ignore_changes = [
       launch_template,
+      user_data,
     ]
   }
 
