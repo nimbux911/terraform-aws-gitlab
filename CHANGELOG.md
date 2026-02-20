@@ -3,6 +3,7 @@
 - Fix backup script race condition when stopping GitLab containers.
 - Ensure GitLab services are fully stopped before docker-compose down.
 - Add logging to backup execution for easier troubleshooting.
+- Add ignore changes for launch_template and user_data.
 
 ## [1.1.0] - 2026-01-22
 

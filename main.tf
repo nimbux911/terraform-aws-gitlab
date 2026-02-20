@@ -254,6 +254,14 @@ resource "aws_instance" "this" {
     id      = aws_launch_template.gitlab.id
     version = "$Latest"
   }
+
+  lifecycle {
+    ignore_changes = [
+      launch_template,
+      user_data,
+    ]
+  }
+
   tags = {
     Name        = "${var.environment}-gitlab"
     snapshot_id = var.gitlab_snapshot_id
