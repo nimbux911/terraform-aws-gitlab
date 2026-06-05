@@ -70,3 +70,13 @@ variable "bucket_name" {
   type     = string
   default  = null
 }
+
+variable "dns_provider" {
+  type        = string
+  default     = "route53"
+}
+
+variable "cloudflare_api_token_ssm_parameter_name" {
+  type        = string
+  default     = null
+}

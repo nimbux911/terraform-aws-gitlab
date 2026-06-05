@@ -3,11 +3,22 @@ locals {
 }
 
 resource "aws_route53_record" "this" {
+  count   = var.dns_provider == "route53" ? 1 : 0
   zone_id = var.zone_id
   name    = var.host_domain
   type    = "A"
   ttl     = "300"
   records = [aws_instance.this.private_ip]
+}
+
+resource "cloudflare_dns_record" "this" {
+  count   = var.dns_provider == "cloudflare" ? 1 : 0
+  zone_id = var.zone_id
+  name    = var.host_domain
+  type    = "A"
+  content = aws_instance.this.private_ip
+  ttl     = 300
+  proxied = false
 }
 
 resource "aws_key_pair" "this" {
@@ -85,6 +96,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "certbot_r53" {
+  count  = var.dns_provider == "route53" ? 1 : 0
   name   = "certbot-r53"
   role   = aws_iam_role.this.id
   policy = <<-EOF
@@ -110,6 +122,30 @@ resource "aws_iam_role_policy" "certbot_r53" {
                 "arn:aws:route53:::hostedzone/${var.zone_id}"
             ]
         }
+    ]
+  }
+  EOF
+}
+
+resource "aws_iam_role_policy" "certbot_cloudflare" {
+  count = var.dns_provider == "cloudflare" ? 1 : 0
+
+  name = "certbot-cloudflare"
+  role = aws_iam_role.this.id
+
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ssm:GetParameter"
+        ],
+        "Resource": [
+          "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.cloudflare_api_token_ssm_parameter_name}"
+        ]
+      }
     ]
   }
   EOF
