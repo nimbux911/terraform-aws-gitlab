@@ -1,11 +1,39 @@
 #!/bin/bash
 
 apt-get update
-apt-get install jq docker.io docker-compose awscli python3-certbot python3-certbot-dns-route53 -y
+apt-get install jq docker.io docker-compose awscli python3-certbot -y
+
+if [ "${dns_provider}" == "route53" ]; then
+    apt-get install python3-certbot-dns-route53 -y
+    certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
+elif [ "${dns_provider}" == "cloudflare" ]; then
+    apt-get install python3-certbot-dns-cloudflare -y
+
+    mkdir -p /root/.secrets/certbot
+
+    TOKEN=$(aws ssm get-parameter \
+        --name "${cloudflare_api_token_ssm_parameter_name}" \
+        --with-decryption \
+        --region "${aws_region}" \
+        --query Parameter.Value \
+        --output text)
+
+    printf "dns_cloudflare_api_token = %s\n" "$TOKEN" > /root/.secrets/certbot/cloudflare.ini
+    unset TOKEN
+    chmod 600 /root/.secrets/certbot/cloudflare.ini
+
+
+    certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect \
+        --dns-cloudflare \
+        --dns-cloudflare-credentials /root/.secrets/certbot/cloudflare.ini \
+        -d ${host_domain}
+else
+    echo "Unsupported dns_provider: ${dns_provider}"
+    exit 1
+fi
+
 usermod -aG docker ubuntu
 service docker restart
-
-certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
 
 SIZE=$(fdisk -l | grep nvme1n1 | awk '{ print $3 }')
 if [ "$SIZE" == "${swap}" ]; then
@@ -63,4 +91,4 @@ fi
 chown -R ubuntu:ubuntu /home/ubuntu
 
 cd $GITLAB_HOME
-docker-compose up -d 
+docker-compose up -d

@@ -207,6 +207,9 @@ resource "aws_launch_template" "gitlab" {
           make_fs         = var.gitlab_snapshot_id == null ? true : false
           swap            = local.swap_size
           backups_enabled = var.backups_enabled
+          dns_provider                            = var.dns_provider
+          cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
+          aws_region                              = data.aws_region.current.name
         })),
       backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {
