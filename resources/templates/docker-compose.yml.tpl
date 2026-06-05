@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   gitlab:
-    image: 'gitlab/gitlab-ce:15.2.5-ce.0'
+    image: 'gitlab/gitlab-ce:19.0.1-ce.0'
     hostname: '${host_domain}'
     container_name: ${gitlab_container_name}
     environment:
