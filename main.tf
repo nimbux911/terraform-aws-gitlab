@@ -202,27 +202,17 @@ resource "aws_launch_template" "gitlab" {
       })),
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
-<<<<<<< Updated upstream
-          certbot_email   = var.certbot_email
-          host_domain     = var.host_domain
-          make_fs         = var.gitlab_snapshot_id == null ? true : false
-          swap            = local.swap_size
-          backups_enabled = var.backups_enabled
+          certbot_email                           = var.certbot_email
+          host_domain                             = var.host_domain
+          gitlab_volume_id                        = replace(var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id, "-", "")
+          make_fs                                 = var.gitlab_snapshot_id == null ? true : false
+          swap_volume_id                          = replace(aws_ebs_volume.swap.id, "-", "")
+          backups_enabled                         = var.backups_enabled
           dns_provider                            = var.dns_provider
           cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
           aws_region                              = data.aws_region.current.name
-        })),
-      backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
-=======
-          certbot_email    = var.certbot_email
-          host_domain      = var.host_domain
-          gitlab_volume_id = replace(var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id, "-", "")
-          make_fs          = var.gitlab_snapshot_id == null ? true : false
-          swap_volume_id   = replace(aws_ebs_volume.swap.id, "-", "")
-          backups_enabled  = var.backups_enabled
       })),
       backup_script = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
->>>>>>> Stashed changes
         {
           vol_arn         = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
           backup_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"

@@ -35,19 +35,6 @@ fi
 usermod -aG docker ubuntu
 service docker restart
 
-<<<<<<< Updated upstream
-SIZE=$(fdisk -l | grep nvme1n1 | awk '{ print $3 }')
-if [ "$SIZE" == "${swap}" ]; then
-    mkswap /dev/nvme1n1
-    swapon /dev/nvme1n1
-    echo "/dev/nvme1n1 none swap sw 0 0" >> /etc/fstab
-else
-    mkswap /dev/nvme2n1
-    swapon /dev/nvme2n1
-    echo "/dev/nvme2n1 none swap sw 0 0" >> /etc/fstab
-=======
-certbot certonly --non-interactive --agree-tos --email ${certbot_email} --no-redirect --dns-route53 -d ${host_domain}
-
 GITLAB_DEVICE="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${gitlab_volume_id}"
 SWAP_DEVICE="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${swap_volume_id}"
 
@@ -61,7 +48,6 @@ done
 if [ ! -e "$GITLAB_DEVICE" ] || [ ! -e "$SWAP_DEVICE" ]; then
     echo "GitLab or swap EBS device did not appear" >&2
     exit 1
->>>>>>> Stashed changes
 fi
 
 mkswap "$SWAP_DEVICE"
@@ -113,8 +99,4 @@ fi
 chown -R ubuntu:ubuntu /home/ubuntu
 
 cd $GITLAB_HOME
-<<<<<<< Updated upstream
 docker-compose up -d
-=======
-docker-compose up -d 
->>>>>>> Stashed changes
