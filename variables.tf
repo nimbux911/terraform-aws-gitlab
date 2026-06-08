@@ -1,64 +1,64 @@
 variable "environment" {
-    default = "test"
+  default = "test"
 }
 
 variable "subnet_id" {
-    type = string
+  type = string
 }
 
 variable "vpc_id" {
-    type = string
+  type = string
 }
 
 variable "instance_type" {
-    type    = string
-    default = "t3.micro"
+  type    = string
+  default = "t3.micro"
 }
 
 variable "ingress_cidr_blocks" {
-    type = list(string)
+  type = list(string)
 }
 
 variable "zone_id" {
-    type = string
+  type = string
 }
 
 variable "certbot_email" {
-    type = string
+  type = string
 }
 
 variable "gitlab_volume_size" {
-    type    = number
-    default = 20
+  type    = number
+  default = 20
 }
 
 variable "host_domain" {
-    type = string
+  type = string
 }
 
 variable "backups_enabled" {
-    type    = bool
-    default = false
+  type    = bool
+  default = false
 }
 
 variable "retention_days" {
-    type    = number
-    default = null
+  type    = number
+  default = null
 }
 
 variable "gitlab_snapshot_id" {
-    type    = string
-    default = null
+  type    = string
+  default = null
 }
 
 variable "swap_volume_size" {
-    type    = number
-    default = 8
+  type    = number
+  default = 8
 }
 
 variable "gitlab_container_name" {
-    type = string
-    default = "gitlab"
+  type    = string
+  default = "gitlab"
 }
 
 variable "enable_s3_artifacts" {
@@ -67,8 +67,8 @@ variable "enable_s3_artifacts" {
 }
 
 variable "bucket_name" {
-  type     = string
-  default  = null
+  type    = string
+  default = null
 }
 
 variable "dns_provider" {
