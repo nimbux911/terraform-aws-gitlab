@@ -2,7 +2,7 @@
 
 - Add Cloudflare support.
 - Mount GitLab EBS volume by stable volume ID.
-- Add configurable EC2 instance name.
+- Add configurable stack name for GitLab resources.
 - Add configurable public and private SSH key SSM parameter names.
 
 ## [1.1.1] - 2026-02-03

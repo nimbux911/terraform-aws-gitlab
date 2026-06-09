@@ -22,7 +22,7 @@ resource "cloudflare_dns_record" "this" {
 }
 
 resource "aws_key_pair" "this" {
-  key_name   = "${var.environment}-gitlab"
+  key_name   = var.stack_name
   public_key = base64decode(aws_ssm_parameter.public_key.value)
 }
 
@@ -32,13 +32,13 @@ resource "tls_private_key" "this" {
 }
 
 resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.public_ssh_key_ssm_parameter_name}"
+  name  = var.public_ssh_key_ssm_parameter_name
   type  = "SecureString"
   value = base64encode(tls_private_key.this.public_key_openssh)
 }
 
 resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.private_ssh_key_ssm_parameter_name}"
+  name  = var.private_ssh_key_ssm_parameter_name
   type  = "SecureString"
   tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
@@ -50,7 +50,7 @@ module "security_group_gitlab" {
   version = "~> 4.0"
 
   description         = "Security group for the gitlab EC2"
-  name                = "${var.environment}-gitlab"
+  name                = var.stack_name
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp"]
@@ -68,17 +68,17 @@ module "security_group_gitlab" {
 
 resource "aws_backup_vault" "gitlab" {
   count = var.backups_enabled ? 1 : 0
-  name  = "${var.environment}-gitlab"
+  name  = var.stack_name
 }
 
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${var.environment}-gitlab"
+  name = var.stack_name
   role = aws_iam_role.this.name
 }
 
 resource "aws_iam_role" "this" {
-  name               = "${var.environment}-gitlab"
+  name               = var.stack_name
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -183,7 +183,7 @@ resource "aws_iam_role_policy" "gitlab_backup" {
 }
 
 resource "aws_launch_template" "gitlab" {
-  name          = "${var.environment}-gitlab"
+  name          = var.stack_name
   image_id      = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
 
@@ -257,7 +257,7 @@ resource "aws_launch_template" "gitlab" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "${var.instance_name}"
+      Name = var.stack_name
     }
   }
 
@@ -272,7 +272,7 @@ resource "aws_ebs_volume" "gitlab" {
   availability_zone = data.aws_subnet.selected.availability_zone
   size              = var.gitlab_volume_size
   tags = {
-    Name = "${var.environment}-gitlab"
+    Name = var.stack_name
   }
 }
 
@@ -283,7 +283,7 @@ resource "aws_ebs_volume" "gitlab_snapshot" {
   size              = var.gitlab_volume_size
   snapshot_id       = var.gitlab_snapshot_id
   tags = {
-    Name        = "${var.environment}-gitlab-snapshot"
+    Name        = "${var.stack_name}-snapshot"
     snapshot_id = var.gitlab_snapshot_id
   }
 }
@@ -303,7 +303,7 @@ resource "aws_instance" "this" {
   }
 
   tags = {
-    Name        = "${var.instance_name}"
+    Name        = var.stack_name
     snapshot_id = var.gitlab_snapshot_id
   }
 }

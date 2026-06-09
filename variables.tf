@@ -2,7 +2,7 @@ variable "environment" {
   default = "test"
 }
 
-variable "instance_name" {
+variable "stack_name" {
   type    = string
   default = "gitlab"
 }
