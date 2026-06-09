@@ -47,6 +47,9 @@ module private_gitlab {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | environment | Environment name of the resources. | `string` | `test` | no |
+| instance\_name | Name assigned to the Gitlab EC2 instance through the `Name` tag. | `string` | `gitlab` | no |
+| public\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated public SSH key. | `string` | `gitlab-public-ssh-key` | no |
+| private\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated private SSH key. | `string` | `gitlab-private-ssh-key` | no |
 | host\_domain | The domain that will be used to reach the gitlab page. | `string` | ` ` | yes |
 | vpc\_id | ID of the VPC which the subnet belongs. | `string` | ` ` | yes |
 | subnet\_id | Subnet id where to place the EC2 instance. | `string` | ` ` | yes |
