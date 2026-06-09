@@ -32,13 +32,13 @@ resource "tls_private_key" "this" {
 }
 
 resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.environment}-gitlab-public-ssh-key"
+  name  = "${var.public_ssh_key_ssm_parameter_name}"
   type  = "SecureString"
   value = base64encode(tls_private_key.this.public_key_openssh)
 }
 
 resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.environment}-gitlab-private-ssh-key"
+  name  = "${var.private_ssh_key_ssm_parameter_name}"
   type  = "SecureString"
   tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
@@ -257,7 +257,7 @@ resource "aws_launch_template" "gitlab" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "${var.environment}-gitlab"
+      Name = "${var.instance_name}"
     }
   }
 
@@ -303,7 +303,7 @@ resource "aws_instance" "this" {
   }
 
   tags = {
-    Name        = "${var.environment}-gitlab"
+    Name        = "${var.instance_name}"
     snapshot_id = var.gitlab_snapshot_id
   }
 }

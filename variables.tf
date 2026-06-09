@@ -2,6 +2,21 @@ variable "environment" {
   default = "test"
 }
 
+variable "instance_name" {
+  type    = string
+  default = "gitlab"
+}
+
+variable "public_ssh_key_ssm_parameter_name" {
+  type    = string
+  default = "gitlab-public-ssh-key"
+}
+
+variable "private_ssh_key_ssm_parameter_name" {
+  type    = string
+  default = "gitlab-private-ssh-key"
+}
+
 variable "subnet_id" {
   type = string
 }
