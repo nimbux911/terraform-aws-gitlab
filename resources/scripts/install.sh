@@ -1,7 +1,12 @@
 #!/bin/bash
 
 apt-get update
-apt-get install jq docker.io docker-compose awscli python3-certbot -y
+apt-get install jq docker.io docker-compose-v2 unzip curl xfsprogs python3-certbot -y
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+./aws/install
+rm -rf aws awscliv2.zip
 
 if [ "${dns_provider}" == "route53" ]; then
     apt-get install python3-certbot-dns-route53 -y
@@ -99,4 +104,4 @@ fi
 chown -R ubuntu:ubuntu /home/ubuntu
 
 cd $GITLAB_HOME
-docker-compose up -d
+docker compose up -d
