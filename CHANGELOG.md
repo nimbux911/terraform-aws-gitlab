@@ -1,4 +1,4 @@
-## [1.1.2] - 2026-06-09
+## [1.2.0] - 2026-06-09
 
 - Add Cloudflare support.
 - Mount GitLab EBS volume by stable volume ID.
