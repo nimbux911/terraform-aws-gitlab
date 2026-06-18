@@ -47,19 +47,23 @@ module private_gitlab {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | environment | Environment name of the resources. | `string` | `test` | no |
+| stack\_name | Name assigned to the Gitlab stack resources. | `string` | `gitlab` | no |
+| public\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated public SSH key. | `string` | `gitlab-public-ssh-key` | no |
+| private\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated private SSH key. | `string` | `gitlab-private-ssh-key` | no |
 | host\_domain | The domain that will be used to reach the gitlab page. | `string` | ` ` | yes |
 | vpc\_id | ID of the VPC which the subnet belongs. | `string` | ` ` | yes |
 | subnet\_id | Subnet id where to place the EC2 instance. | `string` | ` ` | yes |
 | instance\_type | EC2 instance type. | `string` | `t3.micro` | no |
 | ingress\_cidr\_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | ` ` | yes |
-| zone\_id | Zone ID of the Route53 where the record will be created. | `string` | ` ` | yes |
+| zone_id | DNS zone ID. Use the Route 53 hosted zone ID when `dns_provider = "route53"`, or the Cloudflare zone ID when `dns_provider = "cloudflare"`. | `string` | ` ` | yes |
 | certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | ` ` | yes |
 | gitlab\_volume\_size | Size in gb of the gitlab volume | `number` | `20` | no |
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
 | gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
-
+| dns_provider | DNS provider used for DNS records and certbot validation. Supported values: `route53`, `cloudflare`. | `string` | `route53` | no |
+| cloudflare_api_token_ssm_parameter_name | Name/path of an existing SSM SecureString parameter containing the Cloudflare API token for certbot. Required when `dns_provider = "cloudflare"`. | `string` | `null` | no |
 
 ## Outputs
 
@@ -69,3 +73,22 @@ module private_gitlab {
 | gitlab\_instance\_id | Gitlab's EC2 instance ID. |
 | launch\_template\_id | Gitlab's launch template ID. |
 | gitlab\_volume\_id | Gitlab's EBS volume ID. |
+
+## DNS Provider
+
+By default, this module uses Route 53 for DNS records and certbot DNS validation.
+
+```hcl
+dns_provider = "route53"
+zone_id      = "Z05149662IBDII4KPR8MQ"
+```
+
+To use Cloudflare instead, set:
+
+```hcl
+dns_provider = "cloudflare"
+zone_id      = "023e105f4ecef8ad9ca31a8372d0c353"
+cloudflare_api_token_ssm_parameter_name = "/gitlab/cloudflare/api-token"
+```
+
+The SSM parameter must already exist before the instance boots. Here must be stored the Cloudflare api token, which will be used by Certbot.

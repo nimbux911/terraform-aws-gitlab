@@ -1,8 +1,9 @@
 locals {
-   swap_size = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
+  swap_size = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
 }
 
 resource "aws_route53_record" "this" {
+  count   = var.dns_provider == "route53" ? 1 : 0
   zone_id = var.zone_id
   name    = var.host_domain
   type    = "A"
@@ -10,8 +11,18 @@ resource "aws_route53_record" "this" {
   records = [aws_instance.this.private_ip]
 }
 
+resource "cloudflare_dns_record" "this" {
+  count   = var.dns_provider == "cloudflare" ? 1 : 0
+  zone_id = var.zone_id
+  name    = var.host_domain
+  type    = "A"
+  content = aws_instance.this.private_ip
+  ttl     = 300
+  proxied = false
+}
+
 resource "aws_key_pair" "this" {
-  key_name   = "${var.environment}-gitlab"
+  key_name   = var.stack_name
   public_key = base64decode(aws_ssm_parameter.public_key.value)
 }
 
@@ -21,13 +32,13 @@ resource "tls_private_key" "this" {
 }
 
 resource "aws_ssm_parameter" "public_key" {
-  name  = "${var.environment}-gitlab-public-ssh-key"
+  name  = var.public_ssh_key_ssm_parameter_name
   type  = "SecureString"
   value = base64encode(tls_private_key.this.public_key_openssh)
 }
 
 resource "aws_ssm_parameter" "private_key" {
-  name  = "${var.environment}-gitlab-private-ssh-key"
+  name  = var.private_ssh_key_ssm_parameter_name
   type  = "SecureString"
   tier  = "Advanced"
   value = base64encode(tls_private_key.this.private_key_pem)
@@ -35,15 +46,15 @@ resource "aws_ssm_parameter" "private_key" {
 
 
 module "security_group_gitlab" {
-  source      = "terraform-aws-modules/security-group/aws"
-  version     = "~> 4.0"
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 4.0"
 
   description         = "Security group for the gitlab EC2"
-  name                = "${var.environment}-gitlab"
+  name                = var.stack_name
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp"]
-  ingress_with_cidr_blocks = [ for block in var.ingress_cidr_blocks:
+  ingress_with_cidr_blocks = [for block in var.ingress_cidr_blocks :
     {
       from_port   = 2222
       to_port     = 2222
@@ -52,23 +63,23 @@ module "security_group_gitlab" {
       cidr_blocks = block
     }
   ]
-  egress_rules        = ["all-all"]
+  egress_rules = ["all-all"]
 }
 
 resource "aws_backup_vault" "gitlab" {
   count = var.backups_enabled ? 1 : 0
-  name  = "${var.environment}-gitlab"
+  name  = var.stack_name
 }
 
 
 resource "aws_iam_instance_profile" "this" {
-  name = "${var.environment}-gitlab"
+  name = var.stack_name
   role = aws_iam_role.this.name
 }
 
 resource "aws_iam_role" "this" {
-  name = "${var.environment}-gitlab"
-    assume_role_policy = <<POLICY
+  name               = var.stack_name
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -85,6 +96,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "certbot_r53" {
+  count  = var.dns_provider == "route53" ? 1 : 0
   name   = "certbot-r53"
   role   = aws_iam_role.this.id
   policy = <<-EOF
@@ -115,11 +127,35 @@ resource "aws_iam_role_policy" "certbot_r53" {
   EOF
 }
 
+resource "aws_iam_role_policy" "certbot_cloudflare" {
+  count = var.dns_provider == "cloudflare" ? 1 : 0
+
+  name = "certbot-cloudflare"
+  role = aws_iam_role.this.id
+
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ssm:GetParameter"
+        ],
+        "Resource": [
+          "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${var.cloudflare_api_token_ssm_parameter_name}"
+        ]
+      }
+    ]
+  }
+  EOF
+}
+
 resource "aws_iam_role_policy" "gitlab_backup" {
-  count   = var.backups_enabled ? 1 : 0
-  name    = "backup"
-  role    = aws_iam_role.this.id
-  policy  = <<-EOF
+  count  = var.backups_enabled ? 1 : 0
+  name   = "backup"
+  role   = aws_iam_role.this.id
+  policy = <<-EOF
   {
     "Version": "2012-10-17",
     "Statement": [
@@ -147,32 +183,36 @@ resource "aws_iam_role_policy" "gitlab_backup" {
 }
 
 resource "aws_launch_template" "gitlab" {
-  name                                  = "${var.environment}-gitlab"
-  image_id                              = data.aws_ami.ubuntu.id
-  instance_type                         = var.instance_type
+  name          = var.stack_name
+  image_id      = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
 
-  key_name                              = aws_key_pair.this.key_name
-  ebs_optimized                         = true
+  key_name      = aws_key_pair.this.key_name
+  ebs_optimized = true
 
-  user_data                             = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl",
+  user_data = base64encode(templatefile("${path.module}/resources/templates/user_data.tpl",
     {
-      docker_compose_yml  = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl",
+      docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl",
         {
-          host_domain = var.host_domain
+          host_domain           = var.host_domain
           gitlab_container_name = var.gitlab_container_name
-          enable_s3_artifacts    = var.enable_s3_artifacts
-          bucket_name            = var.bucket_name
-          region                 = data.aws_region.current.name
-        })),
-      install_script      = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
+          enable_s3_artifacts   = var.enable_s3_artifacts
+          bucket_name           = var.bucket_name
+          region                = data.aws_region.current.name
+      })),
+      install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {
-          certbot_email   = var.certbot_email
-          host_domain     = var.host_domain
-          make_fs         = var.gitlab_snapshot_id == null ? true : false
-          swap            = local.swap_size
-          backups_enabled = var.backups_enabled
-        })),
-      backup_script      = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
+          certbot_email                           = var.certbot_email
+          host_domain                             = var.host_domain
+          gitlab_volume_id                        = replace(var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id, "-", "")
+          make_fs                                 = var.gitlab_snapshot_id == null ? true : false
+          swap_volume_id                          = replace(aws_ebs_volume.swap.id, "-", "")
+          backups_enabled                         = var.backups_enabled
+          dns_provider                            = var.dns_provider
+          cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
+          aws_region                              = data.aws_region.current.name
+      })),
+      backup_script = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {
           vol_arn         = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
           backup_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
@@ -180,13 +220,13 @@ resource "aws_launch_template" "gitlab" {
           aws_region      = data.aws_region.current.name
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
-        })),
-      renew_script      = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
+      })),
+      renew_script = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
         {
-          certbot_email   = var.certbot_email
-          host_domain     = var.host_domain
+          certbot_email         = var.certbot_email
+          host_domain           = var.host_domain
           gitlab_container_name = var.gitlab_container_name
-        }))
+      }))
     }
   ))
 
@@ -198,7 +238,7 @@ resource "aws_launch_template" "gitlab" {
   }
 
   block_device_mappings {
-    device_name             = "/dev/sda1"
+    device_name = "/dev/sda1"
     ebs {
       volume_size           = 30
       volume_type           = "gp3"
@@ -216,8 +256,8 @@ resource "aws_launch_template" "gitlab" {
 
   tag_specifications {
     resource_type = "instance"
-    tags                        = {
-      Name = "${var.environment}-gitlab"
+    tags = {
+      Name = var.stack_name
     }
   }
 
@@ -232,7 +272,7 @@ resource "aws_ebs_volume" "gitlab" {
   availability_zone = data.aws_subnet.selected.availability_zone
   size              = var.gitlab_volume_size
   tags = {
-    Name = "${var.environment}-gitlab"
+    Name = var.stack_name
   }
 }
 
@@ -243,7 +283,7 @@ resource "aws_ebs_volume" "gitlab_snapshot" {
   size              = var.gitlab_volume_size
   snapshot_id       = var.gitlab_snapshot_id
   tags = {
-    Name        = "${var.environment}-gitlab-snapshot"
+    Name        = "${var.stack_name}-snapshot"
     snapshot_id = var.gitlab_snapshot_id
   }
 }
@@ -263,7 +303,7 @@ resource "aws_instance" "this" {
   }
 
   tags = {
-    Name        = "${var.environment}-gitlab"
+    Name        = var.stack_name
     snapshot_id = var.gitlab_snapshot_id
   }
 }
