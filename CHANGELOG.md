@@ -1,4 +1,4 @@
-## [1.2.0] - 2026-06-19
+## [1.3.0] - 2026-06-19
 - Add `custom_ingress_rules` variable to allow configuring custom inbound CIDR rules.
 
 ## [1.2.0] - 2026-06-09
