@@ -5,6 +5,7 @@
 - Add configurable stack name for GitLab resources.
 - Add configurable public and private SSH key SSM parameter names.
 - Modify install and backup scripts to work with Ubuntu 26.04 LTS.
+- Add `custom_ingress_rules` variable to allow configuring custom inbound CIDR rules.
 
 ## [1.1.1] - 2026-02-03
 

@@ -34,6 +34,18 @@ variable "ingress_cidr_blocks" {
   type = list(string)
 }
 
+variable "custom_ingress_rules" {
+  description = "Custom inbound CIDR rules to add to the GitLab security group."
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = string
+    description = optional(string)
+  }))
+  default = []
+}
+
 variable "zone_id" {
   type = string
 }
