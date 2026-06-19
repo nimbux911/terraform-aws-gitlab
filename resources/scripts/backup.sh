@@ -4,8 +4,16 @@ exec > /tmp/backup.log 2>&1
 date
 export GITLAB_HOME=/srv/gitlab
 cd $GITLAB_HOME
+
+restart_gitlab() {
+    cd $GITLAB_HOME
+    docker compose up -d
+}
+
+trap restart_gitlab EXIT
+
 docker exec gitlab gitlab-ctl stop
-docker-compose down
+docker compose down
 docker rm -f gitlab 2>/dev/null
 
 vol_arn="${vol_arn}"
@@ -13,11 +21,13 @@ iam_role_arn="${backup_role_arn}"
 vault_name="${vault_name}"
 job_id=$(aws backup start-backup-job --lifecycle DeleteAfterDays=${retention_days} --backup-vault-name $vault_name --resource-arn $vol_arn --iam-role-arn $iam_role_arn --region ${aws_region} |jq -r '.BackupJobId')
 
+if [ -z "$job_id" ] || [ "$job_id" == "null" ]; then
+    echo "AWS Backup did not return a BackupJobId" >&2
+    exit 1
+fi
+
 job_status="RUNNING"
 while [ "$job_status" == "RUNNING" ]; do
     sleep 10
     job_status=$(aws backup describe-backup-job --backup-job-id $job_id --region ${aws_region} |jq -r '.State')
 done
-
-cd $GITLAB_HOME
-docker-compose up -d
