@@ -54,15 +54,18 @@ module "security_group_gitlab" {
   vpc_id              = var.vpc_id
   ingress_cidr_blocks = var.ingress_cidr_blocks
   ingress_rules       = ["https-443-tcp", "ssh-tcp"]
-  ingress_with_cidr_blocks = [for block in var.ingress_cidr_blocks :
-    {
-      from_port   = 2222
-      to_port     = 2222
-      protocol    = "tcp"
-      description = "SSH port for Gitlab container port-forward"
-      cidr_blocks = block
-    }
-  ]
+  ingress_with_cidr_blocks = concat(
+    [for block in var.ingress_cidr_blocks :
+      {
+        from_port   = 2222
+        to_port     = 2222
+        protocol    = "tcp"
+        description = "SSH port for Gitlab container port-forward"
+        cidr_blocks = block
+      }
+    ],
+    var.custom_ingress_rules
+  )
   egress_rules = ["all-all"]
 }
 

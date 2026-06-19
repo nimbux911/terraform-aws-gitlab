@@ -31,7 +31,30 @@ module private_gitlab {
     vpc_id              = "vpc-1234567"
     subnet_id           = "subnet-01a3f5a6b3231570f"
     instance_type       = "t3a.medium"
-    ingress_cidr_blocks = ["192.168.0.0/24"]
+    ingress_cidr_blocks  = ["192.168.0.0/24"]
+    custom_ingress_rules = [
+        {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = "172.17.0.0/16"
+            description = "Dev VPC"
+        },
+        {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = "172.19.0.0/16"
+            description = "Stg VPC"
+        },
+        {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = "172.21.0.0/16"
+            description = "Prd VPC"
+        }
+    ]
     zone_id             = "Z05149662IBDII4KPR8MQ"
     certbot_email       = "john.doe@example.com"
     host_domain         = "gitlab.example.com"
@@ -55,6 +78,7 @@ module private_gitlab {
 | subnet\_id | Subnet id where to place the EC2 instance. | `string` | ` ` | yes |
 | instance\_type | EC2 instance type. | `string` | `t3.micro` | no |
 | ingress\_cidr\_blocks | List of IPv4 CIDR ranges to use on all ingress rules. | `list[string]` | ` ` | yes |
+| custom\_ingress\_rules | Custom inbound CIDR rules to add to the GitLab security group. See [Custom Ingress Rules](#custom-ingress-rules). | `list(object)` | `[]` | no |
 | zone_id | DNS zone ID. Use the Route 53 hosted zone ID when `dns_provider = "route53"`, or the Cloudflare zone ID when `dns_provider = "cloudflare"`. | `string` | ` ` | yes |
 | certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | ` ` | yes |
 | gitlab\_volume\_size | Size in gb of the gitlab volume | `number` | `20` | no |
@@ -73,6 +97,33 @@ module private_gitlab {
 | gitlab\_instance\_id | Gitlab's EC2 instance ID. |
 | launch\_template\_id | Gitlab's launch template ID. |
 | gitlab\_volume\_id | Gitlab's EBS volume ID. |
+
+## Custom Ingress Rules
+
+Use `custom_ingress_rules` to add one or more custom inbound CIDR rules to the GitLab security group.
+
+Each rule supports:
+
+| Name | Type | Required |
+|------|------|:--------:|
+| from_port | `number` | yes |
+| to_port | `number` | yes |
+| protocol | `string` | yes |
+| cidr_blocks | `string` | yes |
+| description | `string` | no |
+
+Example:
+
+```hcl
+custom_ingress_rules = [
+  {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = "172.17.0.0/16"
+  }
+]
+```
 
 ## DNS Provider
 
