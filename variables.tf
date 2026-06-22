@@ -107,3 +107,54 @@ variable "cloudflare_api_token_ssm_parameter_name" {
   type    = string
   default = null
 }
+
+variable "smtp_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "smtp_address" {
+  type    = string
+  default = null
+}
+
+variable "smtp_port" {
+  type    = number
+  default = 587
+}
+
+variable "smtp_user_name" {
+  type    = string
+  default = null
+}
+
+variable "smtp_password" {
+  type      = string
+  default   = null
+  sensitive = true
+}
+
+variable "smtp_authentication" {
+  type    = string
+  default = "login"
+}
+
+variable "smtp_domain" {
+  type    = string
+  default = null
+}
+
+variable "smtp_enable_starttls_auto" {
+  type    = bool
+  default = true
+}
+
+variable "gitlab_email_from" {
+  type    = string
+  default = null
+}
+
+variable "gitlab_email_reply_to" {
+  type    = string
+  default = null
+}

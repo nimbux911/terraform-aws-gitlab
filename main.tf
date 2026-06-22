@@ -197,11 +197,21 @@ resource "aws_launch_template" "gitlab" {
     {
       docker_compose_yml = base64encode(templatefile("${path.module}/resources/templates/docker-compose.yml.tpl",
         {
-          host_domain           = var.host_domain
-          gitlab_container_name = var.gitlab_container_name
-          enable_s3_artifacts   = var.enable_s3_artifacts
-          bucket_name           = var.bucket_name
-          region                = data.aws_region.current.name
+          host_domain               = var.host_domain
+          gitlab_container_name     = var.gitlab_container_name
+          enable_s3_artifacts       = var.enable_s3_artifacts
+          bucket_name               = var.bucket_name
+          region                    = data.aws_region.current.name
+          smtp_enabled              = var.smtp_enabled
+          smtp_address              = var.smtp_address
+          smtp_port                 = var.smtp_port
+          smtp_user_name            = var.smtp_user_name
+          smtp_password             = var.smtp_password
+          smtp_authentication       = var.smtp_authentication
+          smtp_domain               = var.smtp_domain
+          smtp_enable_starttls_auto = var.smtp_enable_starttls_auto
+          gitlab_email_from         = var.gitlab_email_from
+          gitlab_email_reply_to     = var.gitlab_email_reply_to
       })),
       install_script = base64encode(templatefile("${path.module}/resources/scripts/install.sh",
         {

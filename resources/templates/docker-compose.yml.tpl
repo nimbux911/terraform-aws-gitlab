@@ -11,6 +11,19 @@ services:
         nginx['ssl_certificate'] = "/etc/gitlab/ssl/${host_domain}.crt"
         nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/${host_domain}.key"
         gitlab_rails['gitlab_shell_ssh_port'] = 2222
+%{ if smtp_enabled }
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = '${smtp_address}'
+        gitlab_rails['smtp_port'] = ${smtp_port}
+        gitlab_rails['smtp_user_name'] = '${smtp_user_name}'
+        gitlab_rails['smtp_password'] = '${smtp_password}'
+        gitlab_rails['smtp_domain'] = '${smtp_domain}'
+        gitlab_rails['smtp_authentication'] = '${smtp_authentication}'
+        gitlab_rails['smtp_enable_starttls_auto'] = ${smtp_enable_starttls_auto}
+        gitlab_rails['gitlab_email_enabled'] = true
+        gitlab_rails['gitlab_email_from'] = '${gitlab_email_from}'
+        gitlab_rails['gitlab_email_reply_to'] = '${gitlab_email_reply_to}'
+%{ endif }
 %{ if enable_s3_artifacts }
         gitlab_rails['artifacts_enabled'] = true
         gitlab_rails['artifacts_object_store_enabled'] = true
