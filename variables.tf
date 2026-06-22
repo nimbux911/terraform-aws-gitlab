@@ -158,3 +158,36 @@ variable "gitlab_email_reply_to" {
   type    = string
   default = null
 }
+
+variable "bitbucket_omniauth_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "bitbucket_app_id" {
+  type    = string
+  default = null
+}
+
+variable "bitbucket_app_secret" {
+  type      = string
+  default   = null
+  sensitive = true
+}
+
+variable "bitbucket_url" {
+  type    = string
+  default = "https://bitbucket.org/"
+}
+
+variable "bitbucket_sign_in_enabled" {
+  description = "Whether Bitbucket should appear as a sign-in provider. Disable this if you only want import support."
+  type        = bool
+  default     = true
+}
+
+variable "bitbucket_import_enabled" {
+  description = "Whether GitLab should allow Bitbucket Cloud as an import source."
+  type        = bool
+  default     = false
+}

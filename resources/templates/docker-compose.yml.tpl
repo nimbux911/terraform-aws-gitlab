@@ -24,6 +24,24 @@ services:
         gitlab_rails['gitlab_email_from'] = '${gitlab_email_from}'
         gitlab_rails['gitlab_email_reply_to'] = '${gitlab_email_reply_to}'
 %{ endif }
+%{ if bitbucket_omniauth_enabled }
+        gitlab_rails['omniauth_enabled'] = true
+        gitlab_rails['omniauth_allow_single_sign_on'] = ['bitbucket']
+%{ if !bitbucket_sign_in_enabled }
+        gitlab_rails['omniauth_auto_sign_in_with_provider'] = false
+%{ endif }
+        gitlab_rails['omniauth_providers'] = [
+          {
+            name: 'bitbucket',
+            app_id: '${bitbucket_app_id}',
+            app_secret: '${bitbucket_app_secret}',
+            url: '${bitbucket_url}'
+          }
+        ]
+%{ endif }
+%{ if bitbucket_import_enabled }
+        gitlab_rails['import_sources'] = ['bitbucket']
+%{ endif }
 %{ if enable_s3_artifacts }
         gitlab_rails['artifacts_enabled'] = true
         gitlab_rails['artifacts_object_store_enabled'] = true
