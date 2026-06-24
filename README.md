@@ -88,6 +88,9 @@ module private_gitlab {
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
 | dns_provider | DNS provider used for DNS records and certbot validation. Supported values: `route53`, `cloudflare`. | `string` | `route53` | no |
 | cloudflare_api_token_ssm_parameter_name | Name/path of an existing SSM SecureString parameter containing the Cloudflare API token for certbot. Required when `dns_provider = "cloudflare"`. | `string` | `null` | no |
+| docker\_bridge\_cidr | CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network. | `string` | `10.200.0.1/24` | no |
+| docker\_default\_address\_pool\_base | Base CIDR for Docker-created bridge networks. Must not overlap with any routed network. | `string` | `10.200.0.0/16` | no |
+| docker\_default\_address\_pool\_size | Prefix size Docker uses when allocating networks from docker_default_address_pool_base. | `number` | `24` | no |
 
 ## Outputs
 
