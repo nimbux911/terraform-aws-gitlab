@@ -3,6 +3,19 @@
 apt-get update
 apt-get install jq docker.io docker-compose-v2 unzip curl xfsprogs python3-certbot -y
 
+mkdir -p /etc/docker
+cat > /etc/docker/daemon.json <<EOF
+{
+  "bip": "${docker_bridge_cidr}",
+  "default-address-pools": [
+    {
+      "base": "${docker_default_address_pool_base}",
+      "size": ${docker_default_address_pool_size}
+    }
+  ]
+}
+EOF
+
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip -q awscliv2.zip
 ./aws/install

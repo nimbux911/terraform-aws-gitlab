@@ -214,6 +214,9 @@ resource "aws_launch_template" "gitlab" {
           dns_provider                            = var.dns_provider
           cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
           aws_region                              = data.aws_region.current.name
+          docker_bridge_cidr                      = var.docker_bridge_cidr
+          docker_default_address_pool_base        = var.docker_default_address_pool_base
+          docker_default_address_pool_size        = var.docker_default_address_pool_size
       })),
       backup_script = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {

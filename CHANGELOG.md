@@ -1,3 +1,7 @@
+## [1.4.0] - 2026-06-24
+
+- Add configurable Docker bridge and address pool CIDRs to avoid conflicts with routed VPC networks.
+
 ## [1.3.0] - 2026-06-19
 - Add `custom_ingress_rules` variable to allow configuring custom inbound CIDR rules.
 
