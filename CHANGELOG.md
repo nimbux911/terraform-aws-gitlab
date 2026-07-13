@@ -1,6 +1,11 @@
+## [1.6.0] - 2026-07-13
+- Add `backup_cron_expression` variable to configure the instance cron schedule for GitLab backups.
+
 ## [1.5.0] - 2026-07-13
 
-- Add `backup_cron_expression` variable to configure the instance cron schedule for GitLab backups.
+- Add configurable SMTP settings for GitLab email delivery.
+- Add Bitbucket OmniAuth sign-in support.
+- Add optional Bitbucket Cloud import source support.
 
 ## [1.4.0] - 2026-06-24
 
