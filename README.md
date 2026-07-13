@@ -88,6 +88,22 @@ module private_gitlab {
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
 | dns_provider | DNS provider used for DNS records and certbot validation. Supported values: `route53`, `cloudflare`. | `string` | `route53` | no |
 | cloudflare_api_token_ssm_parameter_name | Name/path of an existing SSM SecureString parameter containing the Cloudflare API token for certbot. Required when `dns_provider = "cloudflare"`. | `string` | `null` | no |
+| smtp_enabled | Enable SMTP settings for GitLab email delivery. | `bool` | `false` | no |
+| smtp_address | SMTP server address. | `string` | `null` | no |
+| smtp_port | SMTP server port. | `number` | `587` | no |
+| smtp_user_name | SMTP username. | `string` | `null` | no |
+| smtp_password | SMTP password. | `string` | `null` | no |
+| smtp_authentication | SMTP authentication method. | `string` | `login` | no |
+| smtp_domain | SMTP HELO domain. | `string` | `null` | no |
+| smtp_enable_starttls_auto | Enable STARTTLS automatically for SMTP. | `bool` | `true` | no |
+| gitlab_email_from | GitLab sender email address. | `string` | `null` | no |
+| gitlab_email_reply_to | GitLab reply-to email address. | `string` | `null` | no |
+| bitbucket_omniauth_enabled | Enable Bitbucket OmniAuth provider for GitLab. | `bool` | `false` | no |
+| bitbucket_app_id | Bitbucket OAuth app key. | `string` | `null` | no |
+| bitbucket_app_secret | Bitbucket OAuth app secret. | `string` | `null` | no |
+| bitbucket_url | Bitbucket URL used by the OmniAuth provider. | `string` | `https://bitbucket.org/` | no |
+| bitbucket_sign_in_enabled | Show Bitbucket as a GitLab sign-in provider. Disable when using Bitbucket only for imports. | `bool` | `true` | no |
+| bitbucket_import_enabled | Allow Bitbucket Cloud as a GitLab import source. | `bool` | `false` | no |
 | docker\_bridge\_cidr | CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network. | `string` | `10.200.0.1/24` | no |
 | docker\_default\_address\_pool\_base | Base CIDR for Docker-created bridge networks. Must not overlap with any routed network. | `string` | `10.200.0.0/16` | no |
 | docker\_default\_address\_pool\_size | Prefix size Docker uses when allocating networks from docker_default_address_pool_base. | `number` | `24` | no |
@@ -146,3 +162,43 @@ cloudflare_api_token_ssm_parameter_name = "/gitlab/cloudflare/api-token"
 ```
 
 The SSM parameter must already exist before the instance boots. Here must be stored the Cloudflare api token, which will be used by Certbot.
+
+## SMTP
+
+Set `smtp_enabled = true` to configure GitLab email delivery through an external SMTP server.
+
+```hcl
+smtp_enabled              = true
+smtp_address              = "smtp.example.com"
+smtp_port                 = 587
+smtp_user_name            = "gitlab@example.com"
+smtp_password             = "smtp-password"
+smtp_authentication       = "login"
+smtp_domain               = "example.com"
+smtp_enable_starttls_auto = true
+gitlab_email_from         = "gitlab@example.com"
+gitlab_email_reply_to     = "noreply@example.com"
+```
+
+## Bitbucket
+
+Set `bitbucket_omniauth_enabled = true` to enable Bitbucket OAuth sign-in for GitLab.
+
+```hcl
+bitbucket_omniauth_enabled = true
+bitbucket_app_id           = "bitbucket-oauth-key"
+bitbucket_app_secret       = "bitbucket-oauth-secret"
+bitbucket_url              = "https://bitbucket.org/"
+```
+
+To allow Bitbucket Cloud project imports, enable:
+
+```hcl
+bitbucket_import_enabled = true
+```
+
+If you only want Bitbucket imports and do not want Bitbucket shown as a sign-in provider, set:
+
+```hcl
+bitbucket_sign_in_enabled = false
+```

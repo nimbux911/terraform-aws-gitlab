@@ -108,6 +108,88 @@ variable "cloudflare_api_token_ssm_parameter_name" {
   default = null
 }
 
+variable "smtp_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "smtp_address" {
+  type    = string
+  default = null
+}
+
+variable "smtp_port" {
+  type    = number
+  default = 587
+}
+
+variable "smtp_user_name" {
+  type    = string
+  default = null
+}
+
+variable "smtp_password" {
+  type      = string
+  default   = null
+  sensitive = true
+}
+
+variable "smtp_authentication" {
+  type    = string
+  default = "login"
+}
+
+variable "smtp_domain" {
+  type    = string
+  default = null
+}
+
+variable "smtp_enable_starttls_auto" {
+  type    = bool
+  default = true
+}
+
+variable "gitlab_email_from" {
+  type    = string
+  default = null
+}
+
+variable "gitlab_email_reply_to" {
+  type    = string
+  default = null
+}
+
+variable "bitbucket_omniauth_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "bitbucket_app_id" {
+  type    = string
+  default = null
+}
+
+variable "bitbucket_app_secret" {
+  type      = string
+  default   = null
+  sensitive = true
+}
+
+variable "bitbucket_url" {
+  type    = string
+  default = "https://bitbucket.org/"
+}
+
+variable "bitbucket_sign_in_enabled" {
+  description = "Whether Bitbucket should appear as a sign-in provider. Disable this if you only want import support."
+  type        = bool
+  default     = true
+}
+
+variable "bitbucket_import_enabled" {
+  description = "Whether GitLab should allow Bitbucket Cloud as an import source."
+  type        = bool
+  default     = false
 variable "docker_bridge_cidr" {
   description = "CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network."
   type        = string
