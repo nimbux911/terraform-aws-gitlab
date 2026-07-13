@@ -190,4 +190,20 @@ variable "bitbucket_import_enabled" {
   description = "Whether GitLab should allow Bitbucket Cloud as an import source."
   type        = bool
   default     = false
+variable "docker_bridge_cidr" {
+  description = "CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network."
+  type        = string
+  default     = "10.200.0.1/24"
+}
+
+variable "docker_default_address_pool_base" {
+  description = "Base CIDR for Docker-created bridge networks. Must not overlap with any routed network."
+  type        = string
+  default     = "10.200.0.0/16"
+}
+
+variable "docker_default_address_pool_size" {
+  description = "Prefix size Docker uses when allocating networks from docker_default_address_pool_base."
+  type        = number
+  default     = 24
 }

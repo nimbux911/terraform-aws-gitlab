@@ -104,6 +104,9 @@ module private_gitlab {
 | bitbucket_url | Bitbucket URL used by the OmniAuth provider. | `string` | `https://bitbucket.org/` | no |
 | bitbucket_sign_in_enabled | Show Bitbucket as a GitLab sign-in provider. Disable when using Bitbucket only for imports. | `bool` | `true` | no |
 | bitbucket_import_enabled | Allow Bitbucket Cloud as a GitLab import source. | `bool` | `false` | no |
+| docker\_bridge\_cidr | CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network. | `string` | `10.200.0.1/24` | no |
+| docker\_default\_address\_pool\_base | Base CIDR for Docker-created bridge networks. Must not overlap with any routed network. | `string` | `10.200.0.0/16` | no |
+| docker\_default\_address\_pool\_size | Prefix size Docker uses when allocating networks from docker_default_address_pool_base. | `number` | `24` | no |
 
 ## Outputs
 
