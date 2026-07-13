@@ -73,6 +73,12 @@ variable "retention_days" {
   default = null
 }
 
+variable "backup_cron_expression" {
+  description = "Cron expression used to schedule GitLab backups on the instance."
+  type        = string
+  default     = "0 6 * * *"
+}
+
 variable "gitlab_snapshot_id" {
   type    = string
   default = null
