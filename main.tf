@@ -227,6 +227,7 @@ resource "aws_launch_template" "gitlab" {
           make_fs                                 = var.gitlab_snapshot_id == null ? true : false
           swap_volume_id                          = replace(aws_ebs_volume.swap.id, "-", "")
           backups_enabled                         = var.backups_enabled
+          backup_cron_expression                  = var.backup_cron_expression
           dns_provider                            = var.dns_provider
           cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
           aws_region                              = data.aws_region.current.name

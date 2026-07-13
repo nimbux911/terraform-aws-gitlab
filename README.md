@@ -57,11 +57,12 @@ module private_gitlab {
     ]
     zone_id             = "Z05149662IBDII4KPR8MQ"
     certbot_email       = "john.doe@example.com"
-    host_domain         = "gitlab.example.com"
-    gitlab_volume_size  = 30
-    backups_enabled     = true
-    retention_days      = 7
-    swap_volume_size    = 8
+    host_domain            = "gitlab.example.com"
+    gitlab_volume_size     = 30
+    backups_enabled        = true
+    backup_cron_expression = "0 21 * * *"
+    retention_days         = 7
+    swap_volume_size       = 8
 }
 ```
 
@@ -83,6 +84,7 @@ module private_gitlab {
 | certbot\_email | E-mail where certbot will send notifications about the certificate. | `string` | ` ` | yes |
 | gitlab\_volume\_size | Size in gb of the gitlab volume | `number` | `20` | no |
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
+| backup\_cron\_expression | Cron expression used to schedule GitLab backups on the instance. | `string` | `0 6 * * *` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
 | gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |

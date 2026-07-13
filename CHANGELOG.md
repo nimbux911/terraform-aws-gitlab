@@ -1,3 +1,6 @@
+## [1.6.0] - 2026-07-13
+- Add `backup_cron_expression` variable to configure the instance cron schedule for GitLab backups.
+
 ## [1.5.0] - 2026-07-13
 
 - Add configurable SMTP settings for GitLab email delivery.

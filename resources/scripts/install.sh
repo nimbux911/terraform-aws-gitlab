@@ -104,7 +104,7 @@ fi
 echo "30 5 * * * /home/ubuntu/renew.sh" > mycron
 
 if [ "${backups_enabled}" == "true" ]; then
-    echo "0 6 * * * /home/ubuntu/backup.sh" >> mycron
+    echo "${backup_cron_expression} /home/ubuntu/backup.sh" >> mycron
 fi
 
 crontab -u root mycron
