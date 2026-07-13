@@ -1,3 +1,7 @@
+## [1.5.0] - 2026-07-13
+
+- Add `backup_cron_expression` variable to configure the instance cron schedule for GitLab backups.
+
 ## [1.4.0] - 2026-06-24
 
 - Add configurable Docker bridge and address pool CIDRs to avoid conflicts with routed VPC networks.
