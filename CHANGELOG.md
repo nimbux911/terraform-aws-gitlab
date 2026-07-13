@@ -1,3 +1,9 @@
+## [1.4.0] - 2026-06-22
+
+- Add configurable SMTP settings for GitLab email delivery.
+- Add Bitbucket OmniAuth sign-in support.
+- Add optional Bitbucket Cloud import source support.
+
 ## [1.3.0] - 2026-06-19
 - Add `custom_ingress_rules` variable to allow configuring custom inbound CIDR rules.
 
