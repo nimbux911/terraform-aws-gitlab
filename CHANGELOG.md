@@ -1,3 +1,7 @@
+## [1.6.1] - 2026-07-14
+
+- Fix missing closing brace in `bitbucket_import_enabled` variable block.
+
 ## [1.6.0] - 2026-07-13
 - Add `backup_cron_expression` variable to configure the instance cron schedule for GitLab backups.
 

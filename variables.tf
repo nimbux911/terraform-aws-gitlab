@@ -196,6 +196,8 @@ variable "bitbucket_import_enabled" {
   description = "Whether GitLab should allow Bitbucket Cloud as an import source."
   type        = bool
   default     = false
+}
+
 variable "docker_bridge_cidr" {
   description = "CIDR used by Docker's default bridge. Must not overlap with any VPC, peered VPC, VPN, or on-prem network."
   type        = string
