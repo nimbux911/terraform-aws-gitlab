@@ -1,3 +1,8 @@
+## [1.7.0] - 2026-07-15
+
+- Add optional CloudWatch monitoring configured through SSM, including host metrics, GitLab health checks, and TLS certificate expiry metrics.
+- Attach `AmazonSSMManagedInstanceCore` to the GitLab instance role.
+
 ## [1.6.1] - 2026-07-14
 
 - Fix missing closing brace in `bitbucket_import_enabled` variable block.
