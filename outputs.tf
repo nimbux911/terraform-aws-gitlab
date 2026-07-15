@@ -13,3 +13,18 @@ output "launch_template_id" {
 output "gitlab_volume_id" {
   value = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id
 }
+
+output "gitlab_metrics_namespace" {
+  value       = var.enable_monitoring ? module.monitoring[0].metrics_namespace : null
+  description = "CloudWatch namespace used for GitLab custom metrics when monitoring is enabled."
+}
+
+output "gitlab_health_check_metric_name" {
+  value       = var.enable_monitoring ? module.monitoring[0].health_check_metric_name : null
+  description = "CloudWatch custom metric published by the internal GitLab health check."
+}
+
+output "gitlab_certificate_expiry_metric_name" {
+  value       = var.enable_monitoring ? module.monitoring[0].certificate_expiry_metric_name : null
+  description = "CloudWatch custom metric published by the GitLab TLS certificate check."
+}

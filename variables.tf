@@ -2,6 +2,36 @@ variable "environment" {
   default = "test"
 }
 
+variable "enable_monitoring" {
+  description = "Enable CloudWatch Agent host metrics and GitLab health and certificate custom metrics through SSM."
+  type        = bool
+  default     = false
+}
+
+variable "gitlab_healthcheck_url" {
+  description = "Internal GitLab health endpoint checked from the GitLab instance."
+  type        = string
+  default     = null
+}
+
+variable "gitlab_metrics_namespace" {
+  description = "CloudWatch namespace used for GitLab custom metrics."
+  type        = string
+  default     = "Custom/GitLab"
+}
+
+variable "gitlab_cert_host" {
+  description = "Host whose served TLS certificate is checked from the GitLab instance."
+  type        = string
+  default     = null
+}
+
+variable "gitlab_cert_port" {
+  description = "TLS port used by the GitLab certificate check."
+  type        = number
+  default     = 443
+}
+
 variable "stack_name" {
   type    = string
   default = "gitlab"
@@ -137,7 +167,6 @@ variable "smtp_user_name" {
 variable "smtp_password" {
   type      = string
   default   = null
-  sensitive = true
 }
 
 variable "smtp_authentication" {
@@ -178,7 +207,6 @@ variable "bitbucket_app_id" {
 variable "bitbucket_app_secret" {
   type      = string
   default   = null
-  sensitive = true
 }
 
 variable "bitbucket_url" {

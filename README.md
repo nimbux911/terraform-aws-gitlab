@@ -63,6 +63,7 @@ module private_gitlab {
     backup_cron_expression = "0 21 * * *"
     retention_days         = 7
     swap_volume_size       = 8
+    enable_monitoring      = true
 }
 ```
 
@@ -71,6 +72,11 @@ module private_gitlab {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | environment | Environment name of the resources. | `string` | `test` | no |
+| enable\_monitoring | Enable CloudWatch Agent host metrics and GitLab custom metrics configured through SSM. | `bool` | `false` | no |
+| gitlab\_healthcheck\_url | Internal GitLab health endpoint checked from the GitLab instance. Defaults to `https://<host_domain>/-/health`. | `string` | `null` | no |
+| gitlab\_metrics\_namespace | CloudWatch namespace used for GitLab custom metrics. | `string` | `Custom/GitLab` | no |
+| gitlab\_cert\_host | Host whose served TLS certificate is checked from the GitLab instance. Defaults to `host_domain`. | `string` | `null` | no |
+| gitlab\_cert\_port | TLS port used by the GitLab certificate check. | `number` | `443` | no |
 | stack\_name | Name assigned to the Gitlab stack resources. | `string` | `gitlab` | no |
 | public\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated public SSH key. | `string` | `gitlab-public-ssh-key` | no |
 | private\_ssh\_key\_ssm\_parameter\_name | SSM SecureString parameter name used to store the generated private SSH key. | `string` | `gitlab-private-ssh-key` | no |
@@ -118,6 +124,44 @@ module private_gitlab {
 | gitlab\_instance\_id | Gitlab's EC2 instance ID. |
 | launch\_template\_id | Gitlab's launch template ID. |
 | gitlab\_volume\_id | Gitlab's EBS volume ID. |
+| gitlab\_metrics\_namespace | CloudWatch namespace used for GitLab custom metrics when monitoring is enabled. |
+| gitlab\_health\_check\_metric\_name | CloudWatch custom metric published by the internal GitLab health check. |
+| gitlab\_certificate\_expiry\_metric\_name | CloudWatch custom metric published by the GitLab TLS certificate check. |
+
+## Monitoring
+
+Set `enable_monitoring = true` to configure monitoring through AWS Systems Manager. The instance always receives `AmazonSSMManagedInstanceCore`, which enables SSM management independently from this flag.
+
+When enabled, the module creates an SSM Document and Association for the GitLab EC2 instance. The document installs and configures the CloudWatch Agent, writes the custom metric scripts, and creates a dedicated cron file. It does not modify `user_data`, GitLab's existing crontab, security groups, or listening ports.
+
+CloudWatch Agent publishes these host metrics in the `CWAgent` namespace:
+
+| Metric | Dimensions |
+|------|------------|
+| `disk_used_percent` for `/` and `/srv/gitlab` | `InstanceId`, `Environment`, `Service=gitlab` |
+| `mem_used_percent` | `InstanceId`, `Environment`, `Service=gitlab` |
+| `swap_used_percent` | `InstanceId`, `Environment`, `Service=gitlab` |
+
+The scripts publish these custom metrics in `gitlab_metrics_namespace`:
+
+| Metric | Frequency | Meaning |
+|------|-----------|---------|
+| `GitLabHealthCheckSuccess` | Every minute | `1` when the configured health URL completes with an HTTP status below 400, including redirects; `0` otherwise. |
+| `GitLabCertDaysRemaining` | Every 12 hours | Whole days until expiration of the certificate served by `gitlab_cert_host:gitlab_cert_port`. |
+
+The health and certificate checks run from the GitLab instance, so the configured hostname must resolve and be reachable from that instance.
+
+The instance needs outbound HTTPS connectivity to AWS Systems Manager (`ssm`, `ssmmessages`, and `ec2messages`), CloudWatch, and the AWS CLI/CloudWatch Agent package endpoints. Provide this through a NAT gateway, proxy, or the applicable VPC endpoints. AWS CLI is installed by the SSM document only if it is not already present.
+
+Suggested Grafana alerts using the CloudWatch datasource:
+
+| Alert | Condition |
+|------|-----------|
+| GitLab EC2 status check failed | EC2 `StatusCheckFailed` is greater than `0`. |
+| GitLab disk usage high | `CWAgent/disk_used_percent` is greater than `80`. |
+| GitLab memory usage high | `CWAgent/mem_used_percent` is greater than `90`. |
+| GitLab internal health check failed | `Custom/GitLab/GitLabHealthCheckSuccess` minimum is less than `1` for 5 minutes. |
+| GitLab TLS certificate expires soon | `Custom/GitLab/GitLabCertDaysRemaining` is less than `14`. |
 
 ## Custom Ingress Rules
 

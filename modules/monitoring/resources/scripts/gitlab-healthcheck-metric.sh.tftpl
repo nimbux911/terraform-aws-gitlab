@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -u
+
+namespace='${metrics_namespace}'
+region='${region}'
+environment='${environment}'
+imds_token="$(curl --fail --silent --show-error --max-time 2 -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600' 2>/dev/null || true)"
+instance_id="$(curl --fail --silent --show-error --max-time 2 -H "X-aws-ec2-metadata-token: $imds_token" http://169.254.169.254/latest/meta-data/instance-id 2>/dev/null || true)"
+if [ -z "$instance_id" ]; then
+  exit 1
+fi
+
+value=0
+if curl --fail --silent --show-error --location --max-time 10 '${healthcheck_url}' >/dev/null 2>&1; then
+  value=1
+fi
+
+aws cloudwatch put-metric-data \
+  --region "$region" \
+  --namespace "$namespace" \
+  --metric-name GitLabHealthCheckSuccess \
+  --value "$value" \
+  --unit Count \
+  --dimensions "InstanceId=$instance_id,Environment=$environment,Service=gitlab"

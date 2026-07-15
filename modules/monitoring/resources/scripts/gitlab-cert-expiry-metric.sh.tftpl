@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -u
+
+namespace='${metrics_namespace}'
+region='${region}'
+environment='${environment}'
+host='${cert_host}'
+port='${cert_port}'
+imds_token="$(curl --fail --silent --show-error --max-time 2 -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600' 2>/dev/null || true)"
+instance_id="$(curl --fail --silent --show-error --max-time 2 -H "X-aws-ec2-metadata-token: $imds_token" http://169.254.169.254/latest/meta-data/instance-id 2>/dev/null || true)"
+if [ -z "$instance_id" ]; then
+  exit 1
+fi
+
+certificate="$(timeout 15 openssl s_client -connect "$host:$port" -servername "$host" </dev/null 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null || true)"
+expires_at="$${certificate#notAfter=}"
+if [ -z "$expires_at" ]; then
+  exit 1
+fi
+
+expires_epoch="$(date --date="$expires_at" +%s 2>/dev/null || true)"
+if [ -z "$expires_epoch" ]; then
+  exit 1
+fi
+
+now_epoch="$(date +%s)"
+days_remaining=$(( (expires_epoch - now_epoch) / 86400 ))
+
+aws cloudwatch put-metric-data \
+  --region "$region" \
+  --namespace "$namespace" \
+  --metric-name GitLabCertDaysRemaining \
+  --value "$days_remaining" \
+  --unit Count \
+  --dimensions "InstanceId=$instance_id,Environment=$environment,Service=gitlab"

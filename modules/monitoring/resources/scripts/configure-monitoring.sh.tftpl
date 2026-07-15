@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y curl openssl unzip
+
+if ! command -v aws >/dev/null 2>&1; then
+  arch="$(uname -m)"
+  case "$arch" in
+    x86_64) aws_arch="x86_64" ;;
+    aarch64|arm64) aws_arch="aarch64" ;;
+    *) echo "Unsupported architecture for AWS CLI: $arch" >&2; exit 1 ;;
+  esac
+  workdir="$(mktemp -d)"
+  trap 'rm -rf "$workdir"' EXIT
+  curl --fail --silent --show-error --location "https://awscli.amazonaws.com/awscli-exe-linux-$aws_arch.zip" -o "$workdir/awscliv2.zip"
+  unzip -q "$workdir/awscliv2.zip" -d "$workdir"
+  "$workdir/aws/install" --update
+fi
+
+if ! dpkg-query --show amazon-cloudwatch-agent >/dev/null 2>&1; then
+  curl --fail --silent --show-error --location "https://amazoncloudwatch-agent.s3.${region}.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb" -o /tmp/amazon-cloudwatch-agent.deb
+  dpkg -i /tmp/amazon-cloudwatch-agent.deb
+  rm -f /tmp/amazon-cloudwatch-agent.deb
+fi
+
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'EOF'
+{
+  "agent": {
+    "metrics_collection_interval": 60
+  },
+  "metrics": {
+    "append_dimensions": {
+      "InstanceId": "$${aws:InstanceId}",
+      "Environment": "${environment}",
+      "Service": "gitlab"
+    },
+    "metrics_collected": {
+      "disk": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60,
+        "resources": ["/", "/srv/gitlab"]
+      },
+      "mem": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60
+      },
+      "swap": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+EOF
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+  -s

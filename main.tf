@@ -1,5 +1,7 @@
 locals {
-  swap_size = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
+  swap_size              = var.swap_volume_size == var.gitlab_volume_size ? var.swap_volume_size + 1 : var.swap_volume_size
+  gitlab_healthcheck_url = coalesce(var.gitlab_healthcheck_url, "https://${var.host_domain}")
+  gitlab_cert_host       = coalesce(var.gitlab_cert_host, var.host_domain)
 }
 
 resource "aws_route53_record" "this" {
@@ -96,6 +98,11 @@ resource "aws_iam_role" "this" {
   ]
 }
 POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_managed_instance_core" {
+  role       = aws_iam_role.this.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_role_policy" "certbot_r53" {
@@ -329,6 +336,22 @@ resource "aws_instance" "this" {
     Name        = var.stack_name
     snapshot_id = var.gitlab_snapshot_id
   }
+}
+
+module "monitoring" {
+  count  = var.enable_monitoring ? 1 : 0
+  source = "./modules/monitoring"
+
+  instance_id       = aws_instance.this.id
+  role_name         = aws_iam_role.this.name
+  region            = data.aws_region.current.name
+  environment       = var.environment
+  healthcheck_url   = local.gitlab_healthcheck_url
+  metrics_namespace = var.gitlab_metrics_namespace
+  cert_host         = local.gitlab_cert_host
+  cert_port         = var.gitlab_cert_port
+
+  depends_on = [aws_iam_role_policy_attachment.ssm_managed_instance_core]
 }
 
 
