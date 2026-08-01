@@ -235,6 +235,8 @@ resource "aws_launch_template" "gitlab" {
           swap_volume_id                          = replace(aws_ebs_volume.swap.id, "-", "")
           backups_enabled                         = var.backups_enabled
           backup_cron_expression                  = var.backup_cron_expression
+          backup_replication_enabled              = var.backup_replication_enabled
+          backup_replication_cron_expression      = var.backup_replication_cron_expression
           dns_provider                            = var.dns_provider
           cloudflare_api_token_ssm_parameter_name = var.cloudflare_api_token_ssm_parameter_name
           aws_region                              = data.aws_region.current.name
@@ -250,6 +252,18 @@ resource "aws_launch_template" "gitlab" {
           aws_region      = data.aws_region.current.name
           backups_enabled = var.backups_enabled
           retention_days  = var.retention_days
+      })),
+      backup_replication_script = base64encode(templatefile("${path.module}/resources/scripts/backup-replication.sh",
+        {
+          source_account_id      = data.aws_caller_identity.current.account_id
+          source_region          = data.aws_region.current.name
+          source_vault_name      = var.backups_enabled ? aws_backup_vault.gitlab[0].id : ""
+          source_volume_arn      = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
+          destination_account_id = coalesce(var.backup_replication_destination_account_id, "")
+          destination_region     = coalesce(var.backup_replication_destination_region, "")
+          destination_role_arn   = coalesce(var.backup_replication_destination_role_arn, "")
+          poll_interval_seconds  = var.backup_replication_poll_interval_seconds
+          timeout_seconds        = var.backup_replication_timeout_seconds
       })),
       renew_script = base64encode(templatefile("${path.module}/resources/scripts/renew.sh",
         {

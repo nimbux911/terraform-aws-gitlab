@@ -62,6 +62,11 @@ module private_gitlab {
     backups_enabled        = true
     backup_cron_expression = "0 21 * * *"
     retention_days         = 7
+    backup_replication_enabled                = true
+    backup_replication_cron_expression        = "15 21 * * *"
+    backup_replication_destination_account_id = "123456789012"
+    backup_replication_destination_region     = "us-west-1"
+    backup_replication_destination_role_arn   = "arn:aws:iam::123456789012:role/gitlab-backup-replication"
     swap_volume_size       = 8
     enable_monitoring      = true
 }
@@ -92,6 +97,13 @@ module private_gitlab {
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | backup\_cron\_expression | Cron expression used to schedule GitLab backups on the instance. | `string` | `0 6 * * *` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
+| backup\_replication\_enabled | Enable cross-account and cross-region replication of unencrypted GitLab EBS backup snapshots. | `bool` | `false` | no |
+| backup\_replication\_cron\_expression | Cron expression used to schedule backup replication on the instance. | `string` | `15 6 * * *` | no |
+| backup\_replication\_destination\_account\_id | AWS account ID that will own the replicated EBS snapshots. | `string` | `null` | no |
+| backup\_replication\_destination\_region | AWS region where the destination account will copy the EBS snapshots. | `string` | `null` | no |
+| backup\_replication\_destination\_role\_arn | IAM role ARN assumed in the destination account to copy EBS snapshots. | `string` | `null` | no |
+| backup\_replication\_poll\_interval\_seconds | Seconds between recovery point and EBS snapshot status checks. | `number` | `30` | no |
+| backup\_replication\_timeout\_seconds | Maximum seconds to wait for a current recovery point and destination copy. | `number` | `43200` | no |
 | gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
 | dns_provider | DNS provider used for DNS records and certbot validation. Supported values: `route53`, `cloudflare`. | `string` | `route53` | no |
@@ -127,6 +139,16 @@ module private_gitlab {
 | gitlab\_metrics\_namespace | CloudWatch namespace used for GitLab custom metrics when monitoring is enabled. |
 | gitlab\_health\_check\_metric\_name | CloudWatch custom metric published by the internal GitLab health check. |
 | gitlab\_certificate\_expiry\_metric\_name | CloudWatch custom metric published by the GitLab TLS certificate check. |
+
+## Backup Replication
+
+Backup replication is independent from the local application-consistent backup. The local backup continues to stop GitLab and create an AWS Backup recovery point in the source account. A second cron job waits for a completed recovery point created after that replication run started, extracts its EBS snapshot ID, and copies it to the configured destination account and region.
+
+The destination account must provide an IAM role whose trust policy allows the GitLab instance role to call `sts:AssumeRole`. The destination role needs `ec2:CopySnapshot`, `ec2:DescribeSnapshots`, and `ec2:CreateTags`. The module grants the source instance permission to inspect local recovery points, share their EBS snapshots temporarily with the destination account, and assume only the configured destination role.
+
+The destination copy is tagged with `Service=gitlab`, `ReplicationManaged=true`, and source account, region, and snapshot identifiers. These tags support idempotency and can be used by a future destination retention policy.
+
+This implementation supports only unencrypted EBS snapshots. It fails without sharing the snapshot if encryption is detected. The destination snapshots are not AWS Backup recovery points, are not encrypted, and do not have retention managed by this module. The source snapshot share is revoked after a successful or failed copy, but remains temporarily enabled when a destination copy is still pending at the configured timeout.
 
 ## Monitoring
 

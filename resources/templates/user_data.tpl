@@ -16,6 +16,11 @@ write_files:
     owner: root
     content: ${backup_script}
     encoding: b64
+  - path: /home/ubuntu/backup-replication.sh
+    permissions: '0744'
+    owner: root
+    content: ${backup_replication_script}
+    encoding: b64
   - path: /home/ubuntu/renew.sh
     permissions: '0744'
     owner: root

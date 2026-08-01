@@ -107,6 +107,10 @@ if [ "${backups_enabled}" == "true" ]; then
     echo "${backup_cron_expression} /home/ubuntu/backup.sh" >> mycron
 fi
 
+if [ "${backup_replication_enabled}" == "true" ]; then
+    echo "${backup_replication_cron_expression} /home/ubuntu/backup-replication.sh" >> mycron
+fi
+
 crontab -u root mycron
 rm mycron
 

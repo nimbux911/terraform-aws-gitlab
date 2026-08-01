@@ -109,6 +109,82 @@ variable "backup_cron_expression" {
   default     = "0 6 * * *"
 }
 
+variable "backup_replication_enabled" {
+  description = "Enable cross-account and cross-region replication of unencrypted GitLab EBS backup snapshots."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.backup_replication_enabled || var.backups_enabled
+    error_message = "backup_replication_enabled requires backups_enabled to be true."
+  }
+}
+
+variable "backup_replication_cron_expression" {
+  description = "Cron expression used to schedule GitLab backup replication on the instance."
+  type        = string
+  default     = "15 6 * * *"
+}
+
+variable "backup_replication_destination_account_id" {
+  description = "AWS account ID that will own the replicated EBS snapshots."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = !var.backup_replication_enabled || (var.backup_replication_destination_account_id != null && can(regex("^[0-9]{12}$", var.backup_replication_destination_account_id)))
+    error_message = "backup_replication_destination_account_id must be a 12-digit AWS account ID when replication is enabled."
+  }
+}
+
+variable "backup_replication_destination_region" {
+  description = "AWS region where the destination account will copy the EBS snapshots."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = !var.backup_replication_enabled || (var.backup_replication_destination_region != null && trimspace(var.backup_replication_destination_region) != "")
+    error_message = "backup_replication_destination_region must be set when replication is enabled."
+  }
+}
+
+variable "backup_replication_destination_role_arn" {
+  description = "IAM role ARN assumed in the destination account to copy EBS snapshots."
+  type        = string
+  default     = null
+
+  validation {
+    condition = !var.backup_replication_enabled || (
+      var.backup_replication_destination_role_arn != null &&
+      var.backup_replication_destination_account_id != null &&
+      can(regex("^arn:[^:]+:iam::${var.backup_replication_destination_account_id}:role/.+$", var.backup_replication_destination_role_arn))
+    )
+    error_message = "backup_replication_destination_role_arn must be a role in the destination account when replication is enabled."
+  }
+}
+
+variable "backup_replication_poll_interval_seconds" {
+  description = "Seconds between backup recovery point and EBS snapshot status checks."
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.backup_replication_poll_interval_seconds > 0
+    error_message = "backup_replication_poll_interval_seconds must be greater than zero."
+  }
+}
+
+variable "backup_replication_timeout_seconds" {
+  description = "Maximum seconds to wait for a current recovery point and destination snapshot copy."
+  type        = number
+  default     = 43200
+
+  validation {
+    condition     = var.backup_replication_timeout_seconds > var.backup_replication_poll_interval_seconds
+    error_message = "backup_replication_timeout_seconds must be greater than backup_replication_poll_interval_seconds."
+  }
+}
+
 variable "gitlab_snapshot_id" {
   type    = string
   default = null
@@ -165,8 +241,8 @@ variable "smtp_user_name" {
 }
 
 variable "smtp_password" {
-  type      = string
-  default   = null
+  type    = string
+  default = null
 }
 
 variable "smtp_authentication" {
@@ -205,8 +281,8 @@ variable "bitbucket_app_id" {
 }
 
 variable "bitbucket_app_secret" {
-  type      = string
-  default   = null
+  type    = string
+  default = null
 }
 
 variable "bitbucket_url" {

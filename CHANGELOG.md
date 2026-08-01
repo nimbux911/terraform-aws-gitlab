@@ -1,3 +1,7 @@
+## [Unreleased]
+
+- Add optional cross-account and cross-region replication of unencrypted GitLab EBS recovery-point snapshots.
+
 ## [1.7.0] - 2026-07-15
 
 - Add optional CloudWatch monitoring configured through SSM, including host metrics, GitLab health checks, and TLS certificate expiry metrics.
