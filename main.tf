@@ -230,7 +230,7 @@ resource "aws_launch_template" "gitlab" {
         {
           certbot_email                           = var.certbot_email
           host_domain                             = var.host_domain
-          gitlab_volume_id                        = replace(var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id, "-", "")
+          gitlab_volume_id                        = replace(local.gitlab_volume_id, "-", "")
           make_fs                                 = var.gitlab_snapshot_id == null ? true : false
           swap_volume_id                          = replace(aws_ebs_volume.swap.id, "-", "")
           backups_enabled                         = var.backups_enabled
@@ -244,7 +244,7 @@ resource "aws_launch_template" "gitlab" {
       })),
       backup_script = base64encode(templatefile("${path.module}/resources/scripts/backup.sh",
         {
-          vol_arn         = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].arn : aws_ebs_volume.gitlab.arn
+          vol_arn         = local.gitlab_volume_arn
           backup_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
           vault_name      = aws_backup_vault.gitlab[0].id
           aws_region      = data.aws_region.current.name
@@ -295,10 +295,15 @@ resource "aws_launch_template" "gitlab" {
     create_before_destroy = true
   }
 
-  depends_on = [aws_ebs_volume.gitlab]
+  depends_on = [
+    aws_ebs_volume.gitlab,
+    aws_ebs_volume.gitlab_snapshot,
+  ]
 }
 
 resource "aws_ebs_volume" "gitlab" {
+  count = var.gitlab_snapshot_id == null ? 1 : 0
+
   availability_zone = data.aws_subnet.selected.availability_zone
   size              = var.gitlab_volume_size
   tags = {
@@ -357,7 +362,7 @@ module "monitoring" {
 
 resource "aws_volume_attachment" "gitlab" {
   device_name = "/dev/sdh"
-  volume_id   = var.gitlab_snapshot_id != null ? aws_ebs_volume.gitlab_snapshot[0].id : aws_ebs_volume.gitlab.id
+  volume_id   = local.gitlab_volume_id
   instance_id = aws_instance.this.id
 }
 

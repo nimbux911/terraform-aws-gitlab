@@ -1,3 +1,9 @@
+## [Unreleased]
+
+- Create only the snapshot-backed GitLab data volume when `gitlab_snapshot_id` is set.
+- Preserve restored GitLab data by consistently starting Docker Compose with `GITLAB_HOME=/srv/gitlab`.
+- Make snapshot bootstrap idempotent for existing AWS CLI, swap, mounts, and fstab entries.
+
 ## [1.7.0] - 2026-07-15
 
 - Add optional CloudWatch monitoring configured through SSM, including host metrics, GitLab health checks, and TLS certificate expiry metrics.
