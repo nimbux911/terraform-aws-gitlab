@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.7.1] - 2026-08-03
 
 - Create only the snapshot-backed GitLab data volume when `gitlab_snapshot_id` is set.
 - Preserve restored GitLab data by consistently starting Docker Compose with `GITLAB_HOME=/srv/gitlab`.
