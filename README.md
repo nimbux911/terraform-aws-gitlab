@@ -92,7 +92,7 @@ module private_gitlab {
 | backups\_enabled | Enabled or not the automated backups | `bool` | `false` | no |
 | backup\_cron\_expression | Cron expression used to schedule GitLab backups on the instance. | `string` | `0 6 * * *` | no |
 | retention\_days | Retention in days for automated backups | `number` | `null` | no | 
-| gitlab\_snapshot\_id | Snapshot id to use for restoring an existitent Gitlab | `string` | `null` | no |
+| gitlab\_snapshot\_id | Snapshot ID to use for restoring an existing GitLab data volume. When set, the module creates only the snapshot-backed data volume. | `string` | `null` | no |
 | swap\_volume\_size | Size in gb of the swap volume | `number` | `8` | no |
 | dns_provider | DNS provider used for DNS records and certbot validation. Supported values: `route53`, `cloudflare`. | `string` | `route53` | no |
 | cloudflare_api_token_ssm_parameter_name | Name/path of an existing SSM SecureString parameter containing the Cloudflare API token for certbot. Required when `dns_provider = "cloudflare"`. | `string` | `null` | no |
@@ -127,6 +127,17 @@ module private_gitlab {
 | gitlab\_metrics\_namespace | CloudWatch namespace used for GitLab custom metrics when monitoring is enabled. |
 | gitlab\_health\_check\_metric\_name | CloudWatch custom metric published by the internal GitLab health check. |
 | gitlab\_certificate\_expiry\_metric\_name | CloudWatch custom metric published by the GitLab TLS certificate check. |
+
+## Snapshot Restore
+
+Set `gitlab_snapshot_id` only for an intentional restore. The module creates a
+single data volume from that snapshot, mounts it at `/srv/gitlab`, and preserves
+the restored `config`, `data`, `logs`, and `docker-compose.yml` directories.
+Docker Compose is started with `GITLAB_HOME=/srv/gitlab` so the restored bind
+mounts are used instead of host-level `/config`, `/data`, and `/logs` paths.
+
+Changing `gitlab_snapshot_id` replaces the data volume. Take a new backup and
+review the Terraform plan before applying a snapshot change.
 
 ## Monitoring
 
